@@ -3,11 +3,6 @@
 
 #include <stdbool.h>
 
-void read_reg(FILE *csv, FILE *bin);
-return_reg();
-search_reg();
-remove_reg();
-insert_reg();
-update_reg();
+void func1(FILE *csv, FILE *bin);
 
 #endif
