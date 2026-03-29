@@ -2,6 +2,43 @@
 #define FEATURES_H
 
 #include <stdbool.h>
+#define TAM_CABECALHO 17
+#define TAM_REG 80
+
+typedef struct cabecalho {
+    char status;
+    int topo;
+    int proxRRN;
+    int nroEstacoes;
+    int nroParesEstacao;
+} CABECALHO;
+
+typedef struct reg{
+    char removido;
+    int proximo;
+    int codEstacao;
+    int codLinha;
+    int codProxEstacao;
+    int distProxEstacao;
+    int codLinhaIntegra;
+    int codEstIntegra;
+
+    int tamNomeEstacao;
+    char *nomeEstacao;
+
+    int tamNomeLinha;
+    char *nomeLinha;
+} REG;
+
+long offset_do_rrn(int rrn);
+void write_header(FILE *fp, CABECALHO *cab);
+void update_header(FILE *fp, CABECALHO *cab);
+CABECALHO read_header(FILE *fp);
+int write_reg(FILE *fp, REG *r);
+REG read_reg(FILE *fp);
+void free_reg(REG *r);
+
+
 
 void func1(FILE *csv, FILE *bin);
 
