@@ -31,11 +31,17 @@ typedef struct reg{
 } REG;
 
 long offset_do_rrn(int rrn);
+void init_header(CABECALHO *cab);
+void read_csv_field(char **cursor, char *dest);
+char *alloc_copy_string(const char *src);
 void write_header(FILE *fp, CABECALHO *cab);
 void update_header(FILE *fp, CABECALHO *cab);
 CABECALHO read_header(FILE *fp);
 int write_reg(FILE *fp, REG *r);
+void free_reg(REG *r);
+void init_reg(REG *r);
 REG read_reg(FILE *fp);
+bool read_csv_reg(FILE *csv, REG *r);
 void free_reg(REG *r);
 
 
