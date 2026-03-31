@@ -1,47 +1,15 @@
+#include "features.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
 
-/* =========================
-   DEFINIÇÕES
-   ========================= */
-
 #define TAM_CABECALHO 17
 #define TAM_REG 80
 #define LIXO '$'
 #define MAX_LINHA_CSV 512
 #define MAX_CAMPO_CSV 256
-
-typedef struct cabecalho {
-    char status;
-    int topo;
-    int proxRRN;
-    int nroEstacoes;
-    int nroParesEstacao;
-} CABECALHO;
-
-typedef struct reg {
-    char removido;
-    int proximo;
-    int codEstacao;
-    int codLinha;
-    int codProxEstacao;
-    int distProxEstacao;
-    int codLinhaIntegra;
-    int codEstIntegra;
-
-    int tamNomeEstacao;
-    char *nomeEstacao;
-
-    int tamNomeLinha;
-    char *nomeLinha;
-} REG;
-
-/* =========================
-   FUNÇÕES DA PROFESSORA
-   ========================= */
 
 void BinarioNaTela(char *arquivo) {
     FILE *fs;
@@ -53,10 +21,8 @@ void BinarioNaTela(char *arquivo) {
                 "fechar ele com fclose depois de usar?\n");
         return;
     }
-
     fseek(fs, 0, SEEK_END);
     size_t fl = ftell(fs);
-
     fseek(fs, 0, SEEK_SET);
     unsigned char *mb = (unsigned char *)malloc(fl);
     if (mb == NULL) {
@@ -101,37 +67,30 @@ void ScanQuoteString(char *str) {
     }
 }
 
-/* =========================
-   AUXILIARES
-   ========================= */
-
-static long offset_do_rrn(int rrn) {
+//Funções auxiliares
+static long offset_do_rrn(int rrn) { //Calcula a posição (em bytes) no arquivo onde está um registro dado o seu RRN
     return (long)TAM_CABECALHO + (long)rrn * (long)TAM_REG;
 }
 
 void free_reg(REG *r) {
     if (r == NULL) return;
-
     if (r->nomeEstacao != NULL) {
         free(r->nomeEstacao);
         r->nomeEstacao = NULL;
     }
-
     if (r->nomeLinha != NULL) {
         free(r->nomeLinha);
         r->nomeLinha = NULL;
     }
-
     r->tamNomeEstacao = 0;
     r->tamNomeLinha = 0;
 }
 
 void init_reg(REG *r) {
-    if (r == NULL) return;
-
+    if (r == NULL) 
+        return;
     r->removido = '1';
     r->proximo = -1;
-
     r->codEstacao = 0;
     r->codLinha = 0;
     r->codProxEstacao = 0;
@@ -148,15 +107,14 @@ void init_reg(REG *r) {
 
 void init_header(CABECALHO *cab) {
     if (cab == NULL) return;
-
-    cab->status = '0';          /* consistente */
+    cab->status = '0';        
     cab->topo = -1;
     cab->proxRRN = 0;
     cab->nroEstacoes = 0;
     cab->nroParesEstacao = 0;
 }
 
-/* Lê um campo de CSV preservando vazios */
+//Lê um campo de CSV preservando vazios
 static void read_csv_field(char **cursor, char *dest) {
     int i = 0;
 
@@ -177,7 +135,7 @@ static void read_csv_field(char **cursor, char *dest) {
 }
 
 /* Duplica string com malloc */
-static char *alloc_copy_string(const char *src) {
+static char *copy_string(const char *src) { //aloca e copia uma string
     if (src == NULL) return NULL;
 
     size_t len = strlen(src);
@@ -188,12 +146,10 @@ static char *alloc_copy_string(const char *src) {
     return dst;
 }
 
-/* =========================
-   CABEÇALHO
-   ========================= */
-
+//Funções do cabeçalho
 void write_header(FILE *fp, CABECALHO *cab) {
-    if (fp == NULL || cab == NULL) return;
+    if (fp == NULL || cab == NULL) 
+        return;
 
     char buf[TAM_CABECALHO];
     memset(buf, 0, TAM_CABECALHO);
@@ -211,7 +167,8 @@ void write_header(FILE *fp, CABECALHO *cab) {
 }
 
 void update_header(FILE *fp, CABECALHO *cab) {
-    if (fp == NULL || cab == NULL) return;
+    if (fp == NULL || cab == NULL) 
+        return;
     write_header(fp, cab);
 }
 
@@ -219,7 +176,8 @@ CABECALHO read_header(FILE *fp) {
     CABECALHO cab;
     memset(&cab, 0, sizeof(CABECALHO));
 
-    if (fp == NULL) return cab;
+    if (fp == NULL) 
+        return cab;
 
     char buf[TAM_CABECALHO];
     fseek(fp, 0, SEEK_SET);
@@ -239,31 +197,29 @@ CABECALHO read_header(FILE *fp) {
     return cab;
 }
 
-/* =========================
-   ESCRITA DE REGISTRO NO BINÁRIO
-   ========================= */
-
+//Escrita no binário
 int write_reg(FILE *fp, REG *r) {
-    if (fp == NULL || r == NULL) return 0;
+    if (fp == NULL || r == NULL) 
+        return 0;
 
     int tamNome  = (r->nomeEstacao == NULL) ? 0 : (int)strlen(r->nomeEstacao);
     int tamLinha = (r->nomeLinha   == NULL) ? 0 : (int)strlen(r->nomeLinha);
 
     int needed = 1
-               + (int)sizeof(int) /* proximo */
-               + (int)sizeof(int) /* codEstacao */
-               + (int)sizeof(int) /* codLinha */
-               + (int)sizeof(int) /* codProxEstacao */
-               + (int)sizeof(int) /* distProxEstacao */
-               + (int)sizeof(int) /* codLinhaIntegra */
-               + (int)sizeof(int) /* codEstIntegra */
-               + (int)sizeof(int) /* tamNomeEstacao */
+               + (int)sizeof(int) //proximo 
+               + (int)sizeof(int) //codEstacao
+               + (int)sizeof(int) //codLinha
+               + (int)sizeof(int) //codProxEstacao 
+               + (int)sizeof(int) //distProxEstacao
+               + (int)sizeof(int) //codLinhaIntegra 
+               + (int)sizeof(int) //codEstIntegra 
+               + (int)sizeof(int) //tamNomeEstacao 
                + tamNome
-               + (int)sizeof(int) /* tamNomeLinha */
+               + (int)sizeof(int) //tamNomeLinha
                + tamLinha;
 
-    if (needed > TAM_REG) {
-        return 0; /* não truncar */
+    if (needed > TAM_REG) { //para nn truncar
+        return 0; 
     }
 
     char buf[TAM_REG];
@@ -273,13 +229,13 @@ int write_reg(FILE *fp, REG *r) {
 
     buf[pos++] = r->removido;
 
-    memcpy(buf + pos, &r->proximo,         sizeof(int)); pos += sizeof(int);
-    memcpy(buf + pos, &r->codEstacao,      sizeof(int)); pos += sizeof(int);
-    memcpy(buf + pos, &r->codLinha,        sizeof(int)); pos += sizeof(int);
-    memcpy(buf + pos, &r->codProxEstacao,  sizeof(int)); pos += sizeof(int);
-    memcpy(buf + pos, &r->distProxEstacao, sizeof(int)); pos += sizeof(int);
-    memcpy(buf + pos, &r->codLinhaIntegra, sizeof(int)); pos += sizeof(int);
-    memcpy(buf + pos, &r->codEstIntegra,   sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->proximo, sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->codEstacao,sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->codLinha, sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->codProxEstacao, sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->distProxEstacao,sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->codLinhaIntegra,sizeof(int)); pos += sizeof(int);
+    memcpy(buf + pos, &r->codEstIntegra, sizeof(int)); pos += sizeof(int);
 
     memcpy(buf + pos, &tamNome, sizeof(int));
     pos += sizeof(int);
@@ -300,10 +256,7 @@ int write_reg(FILE *fp, REG *r) {
     return (int)(fwrite(buf, sizeof(char), TAM_REG, fp) == (size_t)TAM_REG);
 }
 
-/* =========================
-   LEITURA DE REGISTRO DO BINÁRIO
-   ========================= */
-
+//Le o registro do binário
 REG read_reg(FILE *fp) {
     REG r;
     init_reg(&r);
@@ -322,13 +275,13 @@ REG read_reg(FILE *fp) {
     int pos = 0;
 
     r.removido = buf[pos++];
-    memcpy(&r.proximo,         buf + pos, sizeof(int)); pos += sizeof(int);
-    memcpy(&r.codEstacao,      buf + pos, sizeof(int)); pos += sizeof(int);
-    memcpy(&r.codLinha,        buf + pos, sizeof(int)); pos += sizeof(int);
-    memcpy(&r.codProxEstacao,  buf + pos, sizeof(int)); pos += sizeof(int);
-    memcpy(&r.distProxEstacao, buf + pos, sizeof(int)); pos += sizeof(int);
-    memcpy(&r.codLinhaIntegra, buf + pos, sizeof(int)); pos += sizeof(int);
-    memcpy(&r.codEstIntegra,   buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.proximo, buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.codEstacao, buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.codLinha, buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.codProxEstacao, buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.distProxEstacao,buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.codLinhaIntegra,buf + pos, sizeof(int)); pos += sizeof(int);
+    memcpy(&r.codEstIntegra, buf + pos, sizeof(int)); pos += sizeof(int);
 
     memcpy(&r.tamNomeEstacao, buf + pos, sizeof(int));
     pos += sizeof(int);
@@ -378,14 +331,14 @@ bool read_csv_reg(FILE *csv, REG *r){
 
     cursor = linha;
 
-    /* CodEstacao */
+    //CodEstacao
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') r->codEstacao = atoi(campo);
 
-    /* NomeEstacao */
+    //NomeEstacao
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') {
-        r->nomeEstacao = alloc_copy_string(campo);
+        r->nomeEstacao = copy_string(campo);
         if (r->nomeEstacao == NULL) {
             free_reg(r);
             return false;
@@ -393,14 +346,14 @@ bool read_csv_reg(FILE *csv, REG *r){
         r->tamNomeEstacao = (int)strlen(r->nomeEstacao);
     }
 
-    /* CodLinha */
+    //CodLinha
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') r->codLinha = atoi(campo);
 
-    /* NomeLinha */
+    //NomeLinha
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') {
-        r->nomeLinha = alloc_copy_string(campo);
+        r->nomeLinha = copy_string(campo);
         if (r->nomeLinha == NULL) {
             free_reg(r);
             return false;
@@ -408,30 +361,28 @@ bool read_csv_reg(FILE *csv, REG *r){
         r->tamNomeLinha = (int)strlen(r->nomeLinha);
     }
 
-    /* CodProxEstacao */
+    //CodProxEstacao
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') r->codProxEstacao = atoi(campo);
 
-    /* DistProxEstacao */
+    //DistProxEstacao 
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') r->distProxEstacao = atoi(campo);
 
-    /* CodLinhaIntegra */
+    //CodLinhaIntegra
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') r->codLinhaIntegra = atoi(campo);
 
-    /* CodEstIntegra */
+    //CodEstIntegra
     read_csv_field(&cursor, campo);
     if (campo[0] != '\0') r->codEstIntegra = atoi(campo);
 
     return true;
 }
 
-/* =========================
-   EXEMPLO DE FUNCIONALIDADE 1
-   ========================= */
+//Funcionalidades:
 
-bool funcionalidade1(FILE *csv, FILE *bin) {
+bool func1(FILE *csv, FILE *bin) {
     if (csv == NULL || bin == NULL) return false;
 
     CABECALHO cab;

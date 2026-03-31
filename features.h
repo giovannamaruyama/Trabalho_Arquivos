@@ -30,10 +30,11 @@ typedef struct reg{
     char *nomeLinha;
 } REG;
 
+//Funções auxiliares
 long offset_do_rrn(int rrn);
-void init_header(CABECALHO *cab);
-void read_csv_field(char **cursor, char *dest);
-char *alloc_copy_string(const char *src);
+void init_header(CABECALHO *cab); //inicializa o cabecalho
+void read_csv_field(char **cursor, char *dest); 
+char *copy_string(const char *src);
 void write_header(FILE *fp, CABECALHO *cab);
 void update_header(FILE *fp, CABECALHO *cab);
 CABECALHO read_header(FILE *fp);
@@ -44,8 +45,7 @@ REG read_reg(FILE *fp);
 bool read_csv_reg(FILE *csv, REG *r);
 void free_reg(REG *r);
 
-
-
+//Funcionalidades 
 void func1(FILE *csv, FILE *bin);
 
 #endif
