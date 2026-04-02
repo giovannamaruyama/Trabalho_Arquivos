@@ -4,13 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 
-//Estrutura auxiliar para a contagem de pares únicos
-typedef struct {
-    int cod1;
-    int cod2;
-}ParEstacao;
-
-//Funcoes auxiliares:
+//Funcoes auxiliares 
 void BinarioNaTela(char *arquivo) {
     FILE *fs;
     if (arquivo == NULL || !(fs = fopen(arquivo, "rb"))) {
@@ -66,15 +60,36 @@ void ScanQuoteString(char *str) {
     }
 }
 
-// Função auxiliar para converter strings do CSV para inteiros, tratando nulos
-int parse_int_csv(char *token) {
-    if (token == NULL || strlen(token) == 0 || token[0] == '\n' || token[0] == '\r') {
-        return NULO; 
+int nulo_csv(char *token) {
+    if (token == NULL) return 1;
+    while (*token == ' ' || *token == '\t' || *token == '\n' || *token == '\r') {
+        token++;
+    }
+    return *token == '\0';
+}
+
+int converte_csv(char *token) {
+    if (nulo_csv(token)) {
+        return NULO;
     }
     return atoi(token);
 }
 
-//Inicializa os valores do cabeçalho
+// Função extrair tokens do CSV 
+char* extrai_campo_csv(char **stringp) {
+    if (*stringp == NULL) return NULL;
+    char *inicio = *stringp;
+    char *p = strchr(inicio, ','); 
+    
+    if (p != NULL) {
+        *p = '\0';       
+        *stringp = p + 1; 
+    } else {
+        *stringp = NULL;  
+    }
+    return inicio;
+}
+
 void inicializa_cabecalho(Cabecalho *cab) {
     cab->status = '0'; 
     cab->topo = -1;
@@ -83,7 +98,6 @@ void inicializa_cabecalho(Cabecalho *cab) {
     cab->nroParesEstacao = 0;
 }
 
-//Escreve o cabeçalho no arquivo binário
 void escreve_cabecalho(FILE *bin, Cabecalho *cab) {
     fseek(bin, 0, SEEK_SET);
     fwrite(&cab->status, sizeof(char), 1, bin);
@@ -93,7 +107,6 @@ void escreve_cabecalho(FILE *bin, Cabecalho *cab) {
     fwrite(&cab->nroParesEstacao, sizeof(int), 1, bin);
 }
 
-//Inicializa a estrutura do registro, essencial antes de ler uma nova linha
 void inicializa_registro(Registro *reg) {
     reg->removido = '0';
     reg->proximo = -1;
@@ -111,7 +124,6 @@ void inicializa_registro(Registro *reg) {
     reg->nomeLinha = NULL;   
 }
 
-//Libera a memória alocada 
 void libera_registro(Registro *reg) {
     if (reg->nomeEstacao != NULL) {
         free(reg->nomeEstacao);
@@ -123,192 +135,287 @@ void libera_registro(Registro *reg) {
     }
 }
 
-
-//Lê uma linha do arquivo CSV e preenche a struct Registro
 int ler_linha_csv(FILE *csv, Registro *reg){
     char linha[1024];
 
-    // Lê a linha. Se retornar NULL, eh porque chegou no final do arquivo
     if (fgets(linha, sizeof(linha), csv) == NULL) return 0; 
-
-    //Remove os caracteres de quebra de linha do final da string
     linha[strcspn(linha, "\r\n")] = '\0';
 
-    //Prepara o registro (zera ints e coloca ponteiros como NULL)
     inicializa_registro(reg);
     char *ptr = linha;
     char *token;
-    
-    //codEstacao 
-    token = strsep(&ptr, ",");
-    reg->codEstacao = parse_int_csv(token);
-    
-    //nomeEstacao
-    token = strsep(&ptr, ",");
-    if (token && strlen(token) > 0) {
+  
+    token = extrai_campo_csv(&ptr);
+    reg->codEstacao = converte_csv(token);
+   
+    token = extrai_campo_csv(&ptr);
+    if (!nulo_csv(token)) {
         reg->tamNomeEstacao = strlen(token);
         reg->nomeEstacao = malloc((reg->tamNomeEstacao + 1) * sizeof(char));
         strcpy(reg->nomeEstacao, token);
     }
     
-    //codLinha
-    token = strsep(&ptr, ",");
-    reg->codLinha = parse_int_csv(token);
-    
-    //nomeLinha (Alocação dinâmica)
-    token = strsep(&ptr, ",");
-    if (token && strlen(token) > 0) {
+    token = extrai_campo_csv(&ptr);
+    reg->codLinha = converte_csv(token);
+
+    token = extrai_campo_csv(&ptr);
+    if (!nulo_csv(token)) {
         reg->tamNomeLinha = strlen(token);
         reg->nomeLinha = malloc((reg->tamNomeLinha + 1) * sizeof(char));
         strcpy(reg->nomeLinha, token);
     }
+
+    token = extrai_campo_csv(&ptr);
+    reg->codProxEstacao = converte_csv(token);
+  
+    token = extrai_campo_csv(&ptr);
+    reg->distProxEstacao = converte_csv(token);
     
-    //codProxEstacao
-    token = strsep(&ptr, ",");
-    reg->codProxEstacao = parse_int_csv(token);
+    token = extrai_campo_csv(&ptr);
+    reg->codLinhaIntegra = converte_csv(token);
     
-    //distProxEstacao
-    token = strsep(&ptr, ",");
-    reg->distProxEstacao = parse_int_csv(token);
-    
-    //codLinhaIntegra
-    token = strsep(&ptr, ",");
-    reg->codLinhaIntegra = parse_int_csv(token);
-    
-    //codEstIntegra
-    token = strsep(&ptr, ",");
-    reg->codEstIntegra = parse_int_csv(token);
+    token = extrai_campo_csv(&ptr);
+    reg->codEstIntegra = converte_csv(token);
     
     return 1; 
 }
 
-//Escreve um registro no arquivo binário 
+//Função que le um registro do arquivo binário usando um buffer de 80 bytes
+int ler_registro_bin(FILE *bin, Registro *reg) {
+    char buffer[TAM_REGISTRO]; // Buffer de 80 bytes
+    
+    //Lê um bloco de 80 bytes. Se não conseguir ler os 80, é fim de arquivo (EOF)
+    if (fread(buffer, 1, TAM_REGISTRO, bin) != TAM_REGISTRO) {
+        return 0; 
+    }
+
+    inicializa_registro(reg);
+    int offset = 0; // Vai rastreando a posição dentro do buffer
+
+    reg->removido = buffer[offset];
+    offset += 1;
+
+    memcpy(&reg->proximo, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->codEstacao, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->codLinha, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->codProxEstacao, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->distProxEstacao, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->codLinhaIntegra, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->codEstIntegra, buffer + offset, 4);
+    offset += 4;
+
+    memcpy(&reg->tamNomeEstacao, buffer + offset, 4);
+    offset += 4;
+
+    //Lê a string do nome da estação, caso exista
+    if (reg->tamNomeEstacao > 0) {
+        reg->nomeEstacao = malloc((reg->tamNomeEstacao + 1) * sizeof(char));
+        memcpy(reg->nomeEstacao, buffer + offset, reg->tamNomeEstacao);
+        reg->nomeEstacao[reg->tamNomeEstacao] = '\0'; 
+        offset += reg->tamNomeEstacao;
+    }
+
+    memcpy(&reg->tamNomeLinha, buffer + offset, 4);
+    offset += 4;
+
+    //Lê a string do nome da linha
+    if (reg->tamNomeLinha > 0) {
+        reg->nomeLinha = malloc((reg->tamNomeLinha + 1) * sizeof(char));
+        memcpy(reg->nomeLinha, buffer + offset, reg->tamNomeLinha);
+        reg->nomeLinha[reg->tamNomeLinha] = '\0'; // Finaliza com \0
+        // Não precisamos somar o offset aqui pois é o último campo lido. 
+        // O lixo que sobra até o byte 80 é simplesmente ignorado no buffer!
+    }
+    return 1;
+}
+
+
 void escreve_registro_bin(FILE *bin, Registro *reg) {
     int bytes_escritos = 0;
     
-    //Escreve os campos fixos (Corrigido a sintaxe do fwrite)
-    bytes_escritos += fwrite(&reg->removido, sizeof(char), 1, bin);
-    fwrite(&reg->proximo, sizeof(int), 1, bin);         bytes_escritos += 4;
-    fwrite(&reg->codEstacao, sizeof(int), 1, bin);      bytes_escritos += 4;
-    fwrite(&reg->codLinha, sizeof(int), 1, bin);        bytes_escritos += 4;
-    fwrite(&reg->codProxEstacao, sizeof(int), 1, bin);  bytes_escritos += 4;
-    fwrite(&reg->distProxEstacao, sizeof(int), 1, bin); bytes_escritos += 4;
-    fwrite(&reg->codLinhaIntegra, sizeof(int), 1, bin); bytes_escritos += 4;
-    fwrite(&reg->codEstIntegra, sizeof(int), 1, bin);   bytes_escritos += 4;
+    // Escreve os campos fixos na ordem estrita do diagrama
+    fwrite(&reg->removido, sizeof(char), 1, bin);         bytes_escritos += sizeof(char);
+    fwrite(&reg->proximo, sizeof(int), 1, bin);           bytes_escritos += sizeof(int);
+    fwrite(&reg->codEstacao, sizeof(int), 1, bin);        bytes_escritos += sizeof(int);
+    fwrite(&reg->codLinha, sizeof(int), 1, bin);          bytes_escritos += sizeof(int);
+    fwrite(&reg->codProxEstacao, sizeof(int), 1, bin);    bytes_escritos += sizeof(int);
+    fwrite(&reg->distProxEstacao, sizeof(int), 1, bin);   bytes_escritos += sizeof(int);
+    fwrite(&reg->codLinhaIntegra, sizeof(int), 1, bin);   bytes_escritos += sizeof(int);
+    fwrite(&reg->codEstIntegra, sizeof(int), 1, bin);     bytes_escritos += sizeof(int);
     
-    //Escreve campos de tamanho variável 
-    fwrite(&reg->tamNomeEstacao, sizeof(int), 1, bin);  bytes_escritos += 4;
+    // Escreve campos de tamanho variável 
+    fwrite(&reg->tamNomeEstacao, sizeof(int), 1, bin);    bytes_escritos += sizeof(int);
     if (reg->tamNomeEstacao > 0 && reg->nomeEstacao != NULL) {
         fwrite(reg->nomeEstacao, sizeof(char), reg->tamNomeEstacao, bin);
         bytes_escritos += reg->tamNomeEstacao;
     }
     
-    fwrite(&reg->tamNomeLinha, sizeof(int), 1, bin);    bytes_escritos += 4;
+    fwrite(&reg->tamNomeLinha, sizeof(int), 1, bin);      bytes_escritos += sizeof(int);
     if (reg->tamNomeLinha > 0 && reg->nomeLinha != NULL) {
         fwrite(reg->nomeLinha, sizeof(char), reg->tamNomeLinha, bin);
         bytes_escritos += reg->tamNomeLinha;
     }
     
-    //Preenchimento de Lixo
+    // Preenchimento de Lixo
     char lixo = LIXO; 
     while (bytes_escritos < TAM_REGISTRO) { // TAM_REGISTRO é 80
         fwrite(&lixo, sizeof(char), 1, bin);
         bytes_escritos++;
     }
-} // <- CHAVE QUE ESTAVA FALTANDO PARA FECHAR A FUNÇÃO
+}
+// Função auxiliar para imprimir o registro 
+void imprime_registro(Registro *reg) {
+    if (reg->codEstacao != -1) printf("%d ", reg->codEstacao);
+    else printf("NULO ");
+    
+    if (reg->tamNomeEstacao > 0 && reg->nomeEstacao != NULL) printf("%s ", reg->nomeEstacao);
+    else printf("NULO ");
+    
+    if (reg->codLinha != -1) printf("%d ", reg->codLinha);
+    else printf("NULO ");
+    
+    if (reg->tamNomeLinha > 0 && reg->nomeLinha != NULL) printf("%s ", reg->nomeLinha);
+    else printf("NULO ");
+    
+    if (reg->codProxEstacao != -1) printf("%d ", reg->codProxEstacao);
+    else printf("NULO ");
+    
+    if (reg->distProxEstacao != -1) printf("%d ", reg->distProxEstacao);
+    else printf("NULO ");
+    
+    if (reg->codLinhaIntegra != -1) printf("%d ", reg->codLinhaIntegra);
+    else printf("NULO ");
+    
+    if (reg->codEstIntegra != -1) printf("%d\n", reg->codEstIntegra); // O último campo tem o \n
+    else printf("NULO\n");
+}
+
+//Listas:
+
+typedef struct NoEstacao {
+    char *nome;
+    struct NoEstacao *prox;
+} NoEstacao;
+
+typedef struct NoPar {
+    int cod1;
+    int cod2;
+    struct NoPar *prox;
+} NoPar;
+
+void inserir_estacao(NoEstacao **lista, char *nome_estacao, int *contador_estacoes) {
+    if (nome_estacao == NULL || strlen(nome_estacao) == 0) return;
+
+    NoEstacao *atual = *lista;
+    while (atual != NULL) {
+        if (strcmp(atual->nome, nome_estacao) == 0) return;
+        atual = atual->prox;
+    }
+    
+    NoEstacao *novo = malloc(sizeof(NoEstacao));
+    novo->nome = malloc((strlen(nome_estacao) + 1) * sizeof(char));
+    strcpy(novo->nome, nome_estacao);
+    novo->prox = *lista;
+    *lista = novo;
+    
+    (*contador_estacoes)++; 
+}
+
+void inserir_par(NoPar **lista, int cod1, int cod2, int *contador_pares) {
+    if (cod1 == -1 || cod2 == -1) return;
+
+    NoPar *atual = *lista;
+    while (atual != NULL) {
+        if (atual->cod1 == cod1 && atual->cod2 == cod2) return;
+        atual = atual->prox;
+    }
+    
+    NoPar *novo_par = malloc(sizeof(NoPar));
+    novo_par->cod1 = cod1;
+    novo_par->cod2 = cod2;
+    novo_par->prox = *lista;
+    *lista = novo_par;
+    
+    (*contador_pares)++; 
+}
+
+void liberar_lista_estacoes(NoEstacao *lista) {
+    NoEstacao *atual = lista;
+    while (atual != NULL) {
+        NoEstacao *aux = atual;
+        atual = atual->prox;
+        free(aux->nome);
+        free(aux);
+    }
+}
+
+void liberar_lista_pares(NoPar *lista) {
+    NoPar *atual = lista;
+    while (atual != NULL) {
+        NoPar *aux = atual;
+        atual = atual->prox;
+        free(aux);
+    }
+}
+
+//Funcionalidades
 
 void funcionalidade_1(char *nome_csv, char *nome_bin) {
-    FILE *csv = fopen(nome_csv, "r"); //Abre o CSV pra leitura
+    FILE *csv = fopen(nome_csv, "r"); 
     if (csv == NULL) {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
 
-    FILE *bin = fopen(nome_bin, "wb");  //Abre um arquivo binário para escrita
+    FILE *bin = fopen(nome_bin, "wb");  
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
         fclose(csv);
         return;
     }
 
-    //Inicializa e escreve o Cabeçalho com status inconsistente ('0')
     Cabecalho cab;
     inicializa_cabecalho(&cab);
     escreve_cabecalho(bin, &cab); 
 
-    //Ignora a primeira linha do CSV
     char buffer_desc[1024];
     if (fgets(buffer_desc, sizeof(buffer_desc), csv) == NULL) {
-        //Se o arquivo estiver vazio
         fclose(csv);
         fclose(bin);
         return; 
     }
 
-    // Variáveis dinâmicas para contagem de exclusividades para o cabeçalho
-    char **estacoes_unicas = NULL;
-    int max_estacoes = 0;
-    
-    ParEstacao *pares_unicos = NULL;
-    int max_pares = 0;
+    NoEstacao *lista_estacoes = NULL;
+    NoPar *lista_pares = NULL;
 
-    //Le o CSV e grava nno binário
     Registro reg;
     while (ler_linha_csv(csv, &reg)) {
         escreve_registro_bin(bin, &reg);
-        cab.proxRRN++; // Incrementa a contagem do próximo RRN disponível
+        cab.proxRRN++; 
 
-        // Lógica de cálculo de nroEstacoes (Nomes de estação únicos)
-        if (reg.tamNomeEstacao > 0 && reg.nomeEstacao != NULL) {
-            int existe = 0;
-            for (int i = 0; i < cab.nroEstacoes; i++) {
-                if (strcmp(estacoes_unicas[i], reg.nomeEstacao) == 0) {
-                    existe = 1;
-                    break;
-                }
-            }
-            if (!existe) {
-                if (cab.nroEstacoes == max_estacoes) {
-                    max_estacoes = max_estacoes == 0 ? 50 : max_estacoes * 2;
-                    estacoes_unicas = realloc(estacoes_unicas, max_estacoes * sizeof(char*));
-                }
-                estacoes_unicas[cab.nroEstacoes] = malloc((reg.tamNomeEstacao + 1) * sizeof(char));
-                strcpy(estacoes_unicas[cab.nroEstacoes], reg.nomeEstacao);
-                cab.nroEstacoes++;
-            }
+        if (reg.tamNomeEstacao > 0) {
+            inserir_estacao(&lista_estacoes, reg.nomeEstacao, &cab.nroEstacoes);
         }
-
-        // Lógica de cálculo de nroParesEstacao (Pares únicos de codEstacao e codProxEstacao)
-        if (reg.codEstacao != -1 && reg.codProxEstacao != -1) {
-            int existe_par = 0;
-            for (int i = 0; i < cab.nroParesEstacao; i++) {
-                if (pares_unicos[i].cod1 == reg.codEstacao && pares_unicos[i].cod2 == reg.codProxEstacao) {
-                    existe_par = 1;
-                    break;
-                }
-            }
-            if (!existe_par) {
-                if (cab.nroParesEstacao == max_pares) {
-                    max_pares = max_pares == 0 ? 50 : max_pares * 2;
-                    pares_unicos = realloc(pares_unicos, max_pares * sizeof(ParEstacao));
-                }
-                pares_unicos[cab.nroParesEstacao].cod1 = reg.codEstacao;
-                pares_unicos[cab.nroParesEstacao].cod2 = reg.codProxEstacao;
-                cab.nroParesEstacao++;
-            }
-        }
+        inserir_par(&lista_pares, reg.codEstacao, reg.codProxEstacao, &cab.nroParesEstacao);
 
         libera_registro(&reg);
     }
 
-    //Liberação da memória temporária utilizada para as contagens
-    for (int i = 0; i < cab.nroEstacoes; i++) {
-        free(estacoes_unicas[i]);
-    }
-    free(estacoes_unicas);
-    free(pares_unicos);
+    liberar_lista_estacoes(lista_estacoes);
+    liberar_lista_pares(lista_pares);
 
-    //Atualiza o cabeçalho
     cab.status = '1'; 
     escreve_cabecalho(bin, &cab);
 
@@ -317,3 +424,43 @@ void funcionalidade_1(char *nome_csv, char *nome_bin) {
 
     BinarioNaTela(nome_bin);
 }
+
+void funcionalidade_2(char *nome_bin) {
+    FILE *bin = fopen(nome_bin, "rb"); // Abre para leitura binária
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    Cabecalho cab;
+    // Lê o status do arquivo (apenas 1 byte). 
+    if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(bin);
+        return;
+    }
+
+    // Pula o resto do cabeçalho para posicionar a leitura no byte 17 (início dos registros)
+    fseek(bin, 17, SEEK_SET);
+
+    Registro reg;
+    int registros_impressos = 0;
+
+    // Loop lendo todos os registros de 80 em 80 bytes
+    while (ler_registro_bin(bin, &reg)) {
+        // Se não estiver logicamente removido, imprime
+        if (reg.removido == '0') {
+            imprime_registro(&reg);
+            registros_impressos++;
+        }
+        libera_registro(&reg); // Evita vazamento de memória a cada iteração
+    }
+
+    // Caso o arquivo não possua nenhum registro válido (todos removidos ou vazio)
+    if (registros_impressos == 0) {
+        printf("Registro inexistente.\n");
+    }
+
+    fclose(bin);
+}
+

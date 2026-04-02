@@ -20,7 +20,8 @@ typedef struct cabecalho{
 }Cabecalho;
 
 typedef struct registro{
-    char removido;         
+    char removido;       
+    char  
     int proximo;       
     int codEstacao;    
     int codLinha;     
@@ -29,11 +30,11 @@ typedef struct registro{
     int codLinhaIntegra;
     int codEstIntegra; 
     
-    int tamNomeEstacao;// 4 bytes
-    char *nomeEstacao; // Variável (o excedente será lixo '$')
+    int tamNomeEstacao;
+    char *nomeEstacao; 
     
-    int tamNomeLinha;  // 4 bytes
-    char *nomeLinha;   // Variável (o excedente será lixo '$')
+    int tamNomeLinha; 
+    char *nomeLinha;   
 }Registro;
 
 void BinarioNaTela(char *nomeArquivoBinario);
@@ -52,5 +53,6 @@ void escreve_registro_bin(FILE *bin, Registro *reg);
 
 //Funcionalidades:
 void funcionalidade_1(char *nome_csv, char *nome_bin);
+void funcionalidade_2(char *nome_bin);
 
 #endif
