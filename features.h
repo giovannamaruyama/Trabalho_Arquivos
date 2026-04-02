@@ -21,7 +21,6 @@ typedef struct cabecalho{
 
 typedef struct registro{
     char removido;       
-    char  
     int proximo;       
     int codEstacao;    
     int codLinha;     
