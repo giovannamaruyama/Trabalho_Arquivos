@@ -1,51 +1,56 @@
 #ifndef FEATURES_H
 #define FEATURES_H
 
-#include <stdbool.h>
-#define TAM_CABECALHO 17
-#define TAM_REG 80
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
 
-typedef struct cabecalho {
-    char status;
-    int topo;
-    int proxRRN;
-    int nroEstacoes;
-    int nroParesEstacao;
-} CABECALHO;
+#define LIXO '$'
+#define NULO -1
+#define TAM_REGISTRO 80    
+#define TAM_CABECALHO 17   
 
-typedef struct reg{
-    char removido;
-    int proximo;
-    int codEstacao;
-    int codLinha;
+typedef struct cabecalho{
+    char status;           
+    int topo;          
+    int proxRRN;       
+    int nroEstacoes;   
+    int nroParesEstacao; 
+}Cabecalho;
+
+typedef struct registro{
+    char removido;         
+    int proximo;       
+    int codEstacao;    
+    int codLinha;     
     int codProxEstacao;
     int distProxEstacao;
     int codLinhaIntegra;
-    int codEstIntegra;
+    int codEstIntegra; 
+    
+    int tamNomeEstacao;// 4 bytes
+    char *nomeEstacao; // Variável (o excedente será lixo '$')
+    
+    int tamNomeLinha;  // 4 bytes
+    char *nomeLinha;   // Variável (o excedente será lixo '$')
+}Registro;
 
-    int tamNomeEstacao;
-    char *nomeEstacao;
+void BinarioNaTela(char *nomeArquivoBinario);
+void ScanQuoteString(char *str);
 
-    int tamNomeLinha;
-    char *nomeLinha;
-} REG;
+//Funcoes do header
+void inicializa_cabecalho(Cabecalho *cab);
+void escreve_cabecalho(FILE *bin, Cabecalho *cab);
 
-//Funções auxiliares
-long offset_do_rrn(int rrn);
-void init_header(CABECALHO *cab); //inicializa o cabecalho
-void read_csv_field(char **cursor, char *dest); 
-char *copy_string(const char *src);
-void write_header(FILE *fp, CABECALHO *cab);
-void update_header(FILE *fp, CABECALHO *cab);
-CABECALHO read_header(FILE *fp);
-int write_reg(FILE *fp, REG *r);
-void free_reg(REG *r);
-void init_reg(REG *r);
-REG read_reg(FILE *fp);
-bool read_csv_reg(FILE *csv, REG *r);
-void free_reg(REG *r);
+//Funcoes dos registros
+void inicializa_registro(Registro *reg);
+void libera_registro(Registro *reg) ;
 
-//Funcionalidades 
-void func1(FILE *csv, FILE *bin);
+int ler_linha_csv(FILE *csv, Registro *reg);
+void escreve_registro_bin(FILE *bin, Registro *reg);
+
+//Funcionalidades:
+void funcionalidade_1(char *nome_csv, char *nome_bin);
 
 #endif
