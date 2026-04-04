@@ -23,10 +23,18 @@ int main() {
             scanf("%s", arquivo_entrada);
             funcionalidade_2(arquivo_entrada);
             break;
+        
+        case 3: 
+        int n;
+        scanf("%s %d", arquivo_entrada, &n);
+        funcionalidade_3(arquivo_entrada, n);
+        break;
+        
             
         default:
             printf("Funcionalidade invalida.\n");
             break;
+
     }
 
     return 0;
