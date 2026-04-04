@@ -607,12 +607,12 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
             if (reg.removido == '0') {
                 if (satisfaz_todos_criterios(&reg, &conjunto)) {
                     imprime_registro(&reg);
-                    printf("\n");
                     encontrados++;
                 }
             }
             libera_registro(&reg);
         }
+        printf("\n");
         
         if (encontrados == 0) {
             printf("Registro inexistente.\n");
