@@ -541,37 +541,42 @@ int satisfaz_todos_criterios(const Registro *reg, const ConjuntoCriterios *conju
 
 int le_criterios(ConjuntoCriterios *conjunto) {
     int m_criterios;
-    
-    //Lê a quantidade de critérios da busca
     if (scanf("%d", &m_criterios) != 1) return -1; 
-    
     conjunto->num_criterios = 0;
-    
     for (int i = 0; i < m_criterios; i++) {
         char nome_campo[MAX_TAMANHO_STRING];
         char valor_str[MAX_TAMANHO_STRING];
+        
         scanf("%s", nome_campo);
-        ScanQuoteString(valor_str); 
         
         TipoCampo campo = identifica_campo(nome_campo);
         if (campo == CAMPO_INVALIDO) return -1;
         
-        CriteriodBusca *crit = &conjunto->criterios[conjunto->num_criterios];
+        CriterioBusca *crit = &conjunto->criterios[conjunto->num_criterios];
         crit->campo = campo;
         
-        if (strlen(valor_str) == 0) { // O ScanQuoteString devolve vazio se for "NULO"
-            crit->eh_nulo = 1;
-            crit->valor_int = -1;
-        } else {
-            crit->eh_nulo = 0;
-            if (campo == CAMPO_COD_ESTACAO || campo == CAMPO_COD_LINHA ||
-                campo == CAMPO_COD_PROX_ESTACAO || campo == CAMPO_DIST_PROX_ESTACAO ||
-                campo == CAMPO_COD_LINHA_INTEGRA || campo == CAMPO_COD_EST_INTEGRA) {
-                crit->valor_int = atoi(valor_str);
+        if (campo == CAMPO_NOME_ESTACAO || campo == CAMPO_NOME_LINHA) {
+            ScanQuoteString(valor_str); 
+            
+            if (strlen(valor_str) == 0) { 
+                crit->eh_nulo = 1;
+                crit->valor_int = -1;
             } else {
+                crit->eh_nulo = 0;
                 strcpy(crit->valor_str, valor_str);
             }
+        } else {
+            scanf("%s", valor_str);
+            
+            if (strcmp(valor_str, "NULO") == 0) {
+                crit->eh_nulo = 1;
+                crit->valor_int = -1;
+            } else {
+                crit->eh_nulo = 0;
+                crit->valor_int = atoi(valor_str);
+            }
         }
+        
         conjunto->num_criterios++;
     }
     return 0;
