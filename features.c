@@ -552,7 +552,7 @@ int le_criterios(ConjuntoCriterios *conjunto) {
         TipoCampo campo = identifica_campo(nome_campo);
         if (campo == CAMPO_INVALIDO) return -1;
         
-        CriterioBusca *crit = &conjunto->criterios[conjunto->num_criterios];
+        CriteriodBusca *crit = &conjunto->criterios[conjunto->num_criterios];
         crit->campo = campo;
         
         if (campo == CAMPO_NOME_ESTACAO || campo == CAMPO_NOME_LINHA) {
