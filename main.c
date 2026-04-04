@@ -15,13 +15,11 @@ int main() {
 
     switch(func) {
         case 1:
-            // Entrada esperada: 1 estacoes.csv binario.bin
             scanf("%s %s", arquivo_entrada, arquivo_saida);
             funcionalidade_1(arquivo_entrada, arquivo_saida);
             break;
             
         case 2:
-            // Entrada esperada: 2 binario.bin
             scanf("%s", arquivo_entrada);
             funcionalidade_2(arquivo_entrada);
             break;

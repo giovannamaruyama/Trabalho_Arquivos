@@ -4,6 +4,9 @@
 #include <string.h>
 #include <ctype.h>
 
+#define MAX_CAMPOS_BUSCA 8      // Máximo de critérios por busca
+#define MAX_TAMANHO_STRING 256  // Máximo para string de busca
+
 //Funcoes auxiliares 
 void BinarioNaTela(char *arquivo) {
     FILE *fs;
@@ -302,7 +305,7 @@ void imprime_registro(Registro *reg) {
     else printf("NULO\n");
 }
 
-//Listas:
+//Listas para o header:
 
 typedef struct NoEstacao {
     char *nome;
@@ -370,7 +373,7 @@ void liberar_lista_pares(NoPar *lista) {
     }
 }
 
-//Funcionalidades
+//Funcionalidades:
 
 void funcionalidade_1(char *nome_csv, char *nome_bin) {
     FILE *csv = fopen(nome_csv, "r"); 
@@ -453,7 +456,7 @@ void funcionalidade_2(char *nome_bin) {
             imprime_registro(&reg);
             registros_impressos++;
         }
-        libera_registro(&reg); // Evita vazamento de memória a cada iteração
+        libera_registro(&reg); 
     }
 
     // Caso o arquivo não possua nenhum registro válido (todos removidos ou vazio)
@@ -464,3 +467,151 @@ void funcionalidade_2(char *nome_bin) {
     fclose(bin);
 }
 
+typedef enum{
+    CAMPO_COD_ESTACAO,
+    CAMPO_NOME_ESTACAO,
+    CAMPO_COD_LINHA,
+    CAMPO_NOME_LINHA,
+    CAMPO_COD_PROX_ESTACAO,
+    CAMPO_DIST_PROX_ESTACAO,
+    CAMPO_COD_LINHA_INTEGRA,
+    CAMPO_COD_EST_INTEGRA,
+    CAMPO_INVALIDO
+} TipoCampo;
+
+typedef struct {
+    TipoCampo campo;
+    int valor_int;         
+    char valor_str[MAX_TAMANHO_STRING]; 
+    int eh_nulo;           
+} CriteriodBusca;
+
+typedef struct {
+    CriteriodBusca criterios[MAX_CAMPOS_BUSCA];
+    int num_criterios;
+} ConjuntoCriterios;
+
+TipoCampo identifica_campo(const char *nome_campo) {
+    if (strcmp(nome_campo, "codEstacao") == 0) return CAMPO_COD_ESTACAO;
+    if (strcmp(nome_campo, "nomeEstacao") == 0) return CAMPO_NOME_ESTACAO;
+    if (strcmp(nome_campo, "codLinha") == 0) return CAMPO_COD_LINHA;
+    if (strcmp(nome_campo, "nomeLinha") == 0) return CAMPO_NOME_LINHA;
+    if (strcmp(nome_campo, "codProxEstacao") == 0) return CAMPO_COD_PROX_ESTACAO;
+    if (strcmp(nome_campo, "distProxEstacao") == 0) return CAMPO_DIST_PROX_ESTACAO;
+    if (strcmp(nome_campo, "codLinhaIntegra") == 0) return CAMPO_COD_LINHA_INTEGRA;
+    if (strcmp(nome_campo, "codEstIntegra") == 0) return CAMPO_COD_EST_INTEGRA;
+    return CAMPO_INVALIDO;
+}
+
+int satisfaz_criterio(const Registro *reg, const CriteriodBusca *criterio) {
+    switch (criterio->campo) {
+        case CAMPO_COD_ESTACAO:
+            return (criterio->eh_nulo) ? (reg->codEstacao == -1) : (reg->codEstacao == criterio->valor_int);
+        case CAMPO_NOME_ESTACAO:
+            if (criterio->eh_nulo) return (reg->tamNomeEstacao == 0 || reg->nomeEstacao == NULL);
+            if (reg->nomeEstacao == NULL) return 0;
+            return strcmp(reg->nomeEstacao, criterio->valor_str) == 0;
+        case CAMPO_COD_LINHA:
+            return (criterio->eh_nulo) ? (reg->codLinha == -1) : (reg->codLinha == criterio->valor_int);
+        case CAMPO_NOME_LINHA:
+            if (criterio->eh_nulo) return (reg->tamNomeLinha == 0 || reg->nomeLinha == NULL);
+            if (reg->nomeLinha == NULL) return 0;
+            return strcmp(reg->nomeLinha, criterio->valor_str) == 0;
+        case CAMPO_COD_PROX_ESTACAO:
+            return (criterio->eh_nulo) ? (reg->codProxEstacao == -1) : (reg->codProxEstacao == criterio->valor_int);
+        case CAMPO_DIST_PROX_ESTACAO:
+            return (criterio->eh_nulo) ? (reg->distProxEstacao == -1) : (reg->distProxEstacao == criterio->valor_int);
+        case CAMPO_COD_LINHA_INTEGRA:
+            return (criterio->eh_nulo) ? (reg->codLinhaIntegra == -1) : (reg->codLinhaIntegra == criterio->valor_int);
+        case CAMPO_COD_EST_INTEGRA:
+            return (criterio->eh_nulo) ? (reg->codEstIntegra == -1) : (reg->codEstIntegra == criterio->valor_int);
+        default:
+            return 0;
+    }
+}
+
+int satisfaz_todos_criterios(const Registro *reg, const ConjuntoCriterios *conjunto) {
+    for (int i = 0; i < conjunto->num_criterios; i++) {
+        if (!satisfaz_criterio(reg, &conjunto->criterios[i])) {
+            return 0; //Falha em um critério
+        }
+    }
+    return 1; //Satisfaz todos os critérios
+}
+
+int le_criterios(ConjuntoCriterios *conjunto) {
+    int m_criterios;
+    
+    //Lê a quantidade de critérios da busca
+    if (scanf("%d", &m_criterios) != 1) return -1; 
+    
+    conjunto->num_criterios = 0;
+    
+    for (int i = 0; i < m_criterios; i++) {
+        char nome_campo[MAX_TAMANHO_STRING];
+        char valor_str[MAX_TAMANHO_STRING];
+        scanf("%s", nome_campo);
+        ScanQuoteString(valor_str); 
+        
+        TipoCampo campo = identifica_campo(nome_campo);
+        if (campo == CAMPO_INVALIDO) return -1;
+        
+        CriteriodBusca *crit = &conjunto->criterios[conjunto->num_criterios];
+        crit->campo = campo;
+        
+        if (strlen(valor_str) == 0) { // O ScanQuoteString devolve vazio se for "NULO"
+            crit->eh_nulo = 1;
+            crit->valor_int = -1;
+        } else {
+            crit->eh_nulo = 0;
+            if (campo == CAMPO_COD_ESTACAO || campo == CAMPO_COD_LINHA ||
+                campo == CAMPO_COD_PROX_ESTACAO || campo == CAMPO_DIST_PROX_ESTACAO ||
+                campo == CAMPO_COD_LINHA_INTEGRA || campo == CAMPO_COD_EST_INTEGRA) {
+                crit->valor_int = atoi(valor_str);
+            } else {
+                strcpy(crit->valor_str, valor_str);
+            }
+        }
+        conjunto->num_criterios++;
+    }
+    return 0;
+}
+
+void funcionalidade_3(char *nome_bin, int num_buscas) {
+    FILE *bin = fopen(nome_bin, "rb");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    Cabecalho cab;
+    if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(bin);
+        return;
+    }
+    //Executa as N buscas
+    for (int busca_num = 0; busca_num < num_buscas; busca_num++) {
+        ConjuntoCriterios conjunto;
+        if (le_criterios(&conjunto) != 0) break; 
+        // Posiciona no início dos registros (byte 17) para varrer do começo
+        fseek(bin, 17, SEEK_SET);
+        Registro reg;
+        int encontrados = 0;
+        
+        while (ler_registro_bin(bin, &reg)) {
+            if (reg.removido == '0') {
+                if (satisfaz_todos_criterios(&reg, &conjunto)) {
+                    imprime_registro(&reg);
+                    encontrados++;
+                }
+            }
+            libera_registro(&reg);
+        }
+        
+        if (encontrados == 0) {
+            printf("Registro inexistente.\n");
+        }
+    }
+    
+    fclose(bin);
+}
