@@ -616,10 +616,9 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
         if (encontrados == 0) {
             printf("Registro inexistente.\n");
         }
-        
-        if (busca_num < num_buscas - 1) {
-            printf("\n");
-        }
+
+        printf("\n");
+    
     }
     
     fclose(bin);
