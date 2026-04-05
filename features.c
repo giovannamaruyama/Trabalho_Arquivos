@@ -63,36 +63,6 @@ void ScanQuoteString(char *str) {
     }
 }
 
-int nulo_csv(char *token) {
-    if (token == NULL) return 1;
-    while (*token == ' ' || *token == '\t' || *token == '\n' || *token == '\r') {
-        token++;
-    }
-    return *token == '\0';
-}
-
-int converte_csv(char *token) {
-    if (nulo_csv(token)) {
-        return NULO;
-    }
-    return atoi(token);
-}
-
-// Função extrair tokens do CSV 
-char* extrai_campo_csv(char **stringp) {
-    if (*stringp == NULL) return NULL;
-    char *inicio = *stringp;
-    char *p = strchr(inicio, ','); 
-    
-    if (p != NULL) {
-        *p = '\0';       
-        *stringp = p + 1; 
-    } else {
-        *stringp = NULL;  
-    }
-    return inicio;
-}
-
 void inicializa_cabecalho(Cabecalho *cab) {
     cab->status = '0'; 
     cab->topo = -1;
@@ -138,6 +108,67 @@ void libera_registro(Registro *reg) {
     }
 }
 
+//Função auxiliar para imprimir o registro 
+void imprime_registro(Registro *reg) {
+    if (reg->codEstacao != -1) printf("%d ", reg->codEstacao);
+    else printf("NULO ");
+
+    if (reg->tamNomeEstacao > 0 && reg->nomeEstacao != NULL) printf("%s ", reg->nomeEstacao);
+    else printf("NULO ");
+    
+    if (reg->codLinha != -1) printf("%d ", reg->codLinha);
+    else printf("NULO ");
+    
+    if (reg->tamNomeLinha > 0 && reg->nomeLinha != NULL) printf("%s ", reg->nomeLinha);
+    else printf("NULO ");
+    
+    if (reg->codProxEstacao != -1) printf("%d ", reg->codProxEstacao);
+    else printf("NULO ");
+    
+    if (reg->distProxEstacao != -1) printf("%d ", reg->distProxEstacao);
+    else printf("NULO ");
+    
+    if (reg->codLinhaIntegra != -1) printf("%d ", reg->codLinhaIntegra);
+    else printf("NULO ");
+    
+    if (reg->codEstIntegra != -1) printf("%d\n", reg->codEstIntegra); //O último campo tem  \n
+    else printf("NULO\n");
+}
+
+
+//Funcoes auxiliares para ler o CSV:
+
+//Verifica se um campo extraído do CSV eh nulo, vazio ou contém apenas espaços/quebras de linha.
+int nulo_csv(char *campo) {
+    if (campo == NULL) return 1;
+    while (*campo == ' ' || *campo == '\t' || *campo == '\n' || *campo == '\r') {
+        campo++;
+    }
+    return *campo == '\0';
+}
+
+//converte o char em int
+int converte_csv(char *campo) {
+    if (nulo_csv(campo)) {
+        return NULO;
+    }
+    return atoi(campo);
+}
+
+// Função extrair campos do CSV 
+char* extrai_campo_csv(char **campo_string) {
+    if (*campo_string == NULL) return NULL;
+    char *inicio = *campo_string;
+    char *p = strchr(inicio, ','); 
+    if (p != NULL) {
+        *p = '\0';       
+        *campo_string = p + 1; 
+    } else {
+        *campo_string = NULL;  
+    }
+    return inicio;
+}
+
 int ler_linha_csv(FILE *csv, Registro *reg){
     char linha[1024];
 
@@ -146,39 +177,39 @@ int ler_linha_csv(FILE *csv, Registro *reg){
 
     inicializa_registro(reg);
     char *ptr = linha;
-    char *token;
+    char *campo;
   
-    token = extrai_campo_csv(&ptr);
-    reg->codEstacao = converte_csv(token);
+    campo = extrai_campo_csv(&ptr);
+    reg->codEstacao = converte_csv(campo);
    
-    token = extrai_campo_csv(&ptr);
-    if (!nulo_csv(token)) {
-        reg->tamNomeEstacao = strlen(token);
+    campo = extrai_campo_csv(&ptr);
+    if (!nulo_csv(campo)) {
+        reg->tamNomeEstacao = strlen(campo);
         reg->nomeEstacao = malloc((reg->tamNomeEstacao + 1) * sizeof(char));
-        strcpy(reg->nomeEstacao, token);
+        strcpy(reg->nomeEstacao, campo);
     }
     
-    token = extrai_campo_csv(&ptr);
-    reg->codLinha = converte_csv(token);
+    campo = extrai_campo_csv(&ptr);
+    reg->codLinha = converte_csv(campo);
 
-    token = extrai_campo_csv(&ptr);
-    if (!nulo_csv(token)) {
-        reg->tamNomeLinha = strlen(token);
+    campo = extrai_campo_csv(&ptr);
+    if (!nulo_csv(campo)) {
+        reg->tamNomeLinha = strlen(campo);
         reg->nomeLinha = malloc((reg->tamNomeLinha + 1) * sizeof(char));
-        strcpy(reg->nomeLinha, token);
+        strcpy(reg->nomeLinha, campo);
     }
 
-    token = extrai_campo_csv(&ptr);
-    reg->codProxEstacao = converte_csv(token);
+    campo = extrai_campo_csv(&ptr);
+    reg->codProxEstacao = converte_csv(campo);
   
-    token = extrai_campo_csv(&ptr);
-    reg->distProxEstacao = converte_csv(token);
+    campo = extrai_campo_csv(&ptr);
+    reg->distProxEstacao = converte_csv(campo);
     
-    token = extrai_campo_csv(&ptr);
-    reg->codLinhaIntegra = converte_csv(token);
+    campo = extrai_campo_csv(&ptr);
+    reg->codLinhaIntegra = converte_csv(campo);
     
-    token = extrai_campo_csv(&ptr);
-    reg->codEstIntegra = converte_csv(token);
+    campo = extrai_campo_csv(&ptr);
+    reg->codEstIntegra = converte_csv(campo);
     
     return 1; 
 }
@@ -187,13 +218,13 @@ int ler_linha_csv(FILE *csv, Registro *reg){
 int ler_registro_bin(FILE *bin, Registro *reg) {
     char buffer[TAM_REGISTRO]; // Buffer de 80 bytes
     
-    //Lê um bloco de 80 bytes. Se não conseguir ler os 80, é fim de arquivo (EOF)
+    //Le um bloco de 80 bytes, se nn conseguir eh o fim de arquivo 
     if (fread(buffer, 1, TAM_REGISTRO, bin) != TAM_REGISTRO) {
         return 0; 
     }
 
     inicializa_registro(reg);
-    int offset = 0; // Vai rastreando a posição dentro do buffer
+    int offset = 0; //Vai rastreando a posição dentro do buffer
 
     reg->removido = buffer[offset];
     offset += 1;
@@ -237,9 +268,8 @@ int ler_registro_bin(FILE *bin, Registro *reg) {
     if (reg->tamNomeLinha > 0) {
         reg->nomeLinha = malloc((reg->tamNomeLinha + 1) * sizeof(char));
         memcpy(reg->nomeLinha, buffer + offset, reg->tamNomeLinha);
-        reg->nomeLinha[reg->tamNomeLinha] = '\0'; // Finaliza com \0
-        // Não precisamos somar o offset aqui pois é o último campo lido. 
-        // O lixo que sobra até o byte 80 é simplesmente ignorado no buffer!
+        reg->nomeLinha[reg->tamNomeLinha] = '\0'; //Finaliza com \0
+        //O lixo que sobra até o byte 80 é ignorado 
     }
     return 1;
 }
@@ -248,7 +278,7 @@ int ler_registro_bin(FILE *bin, Registro *reg) {
 void escreve_registro_bin(FILE *bin, Registro *reg) {
     int bytes_escritos = 0;
     
-    // Escreve os campos fixos na ordem estrita do diagrama
+    //Escreve os campos fixos do registro
     fwrite(&reg->removido, sizeof(char), 1, bin);         bytes_escritos += sizeof(char);
     fwrite(&reg->proximo, sizeof(int), 1, bin);           bytes_escritos += sizeof(int);
     fwrite(&reg->codEstacao, sizeof(int), 1, bin);        bytes_escritos += sizeof(int);
@@ -258,7 +288,7 @@ void escreve_registro_bin(FILE *bin, Registro *reg) {
     fwrite(&reg->codLinhaIntegra, sizeof(int), 1, bin);   bytes_escritos += sizeof(int);
     fwrite(&reg->codEstIntegra, sizeof(int), 1, bin);     bytes_escritos += sizeof(int);
     
-    // Escreve campos de tamanho variável 
+    //Escreve campos de tamanho variável 
     fwrite(&reg->tamNomeEstacao, sizeof(int), 1, bin);    bytes_escritos += sizeof(int);
     if (reg->tamNomeEstacao > 0 && reg->nomeEstacao != NULL) {
         fwrite(reg->nomeEstacao, sizeof(char), reg->tamNomeEstacao, bin);
@@ -271,38 +301,12 @@ void escreve_registro_bin(FILE *bin, Registro *reg) {
         bytes_escritos += reg->tamNomeLinha;
     }
     
-    // Preenchimento de Lixo
+    //Preenchimento de Lixo
     char lixo = LIXO; 
     while (bytes_escritos < TAM_REGISTRO) { // TAM_REGISTRO é 80
         fwrite(&lixo, sizeof(char), 1, bin);
         bytes_escritos++;
     }
-}
-// Função auxiliar para imprimir o registro 
-void imprime_registro(Registro *reg) {
-    if (reg->codEstacao != -1) printf("%d ", reg->codEstacao);
-    else printf("NULO ");
-    
-    if (reg->tamNomeEstacao > 0 && reg->nomeEstacao != NULL) printf("%s ", reg->nomeEstacao);
-    else printf("NULO ");
-    
-    if (reg->codLinha != -1) printf("%d ", reg->codLinha);
-    else printf("NULO ");
-    
-    if (reg->tamNomeLinha > 0 && reg->nomeLinha != NULL) printf("%s ", reg->nomeLinha);
-    else printf("NULO ");
-    
-    if (reg->codProxEstacao != -1) printf("%d ", reg->codProxEstacao);
-    else printf("NULO ");
-    
-    if (reg->distProxEstacao != -1) printf("%d ", reg->distProxEstacao);
-    else printf("NULO ");
-    
-    if (reg->codLinhaIntegra != -1) printf("%d ", reg->codLinhaIntegra);
-    else printf("NULO ");
-    
-    if (reg->codEstIntegra != -1) printf("%d\n", reg->codEstIntegra); // O último campo tem o \n
-    else printf("NULO\n");
 }
 
 //Listas para o header:
@@ -312,22 +316,22 @@ typedef struct NoEstacao {
     struct NoEstacao *prox;
 } NoEstacao;
 
-typedef struct NoPar {
+typedef struct Nodupla {
     int cod1;
     int cod2;
-    struct NoPar *prox;
-} NoPar;
+    struct NoDupla *prox;
+} NoDupla;
 
 void inserir_estacao(NoEstacao **lista, char *nome_estacao, int *contador_estacoes) {
     if (nome_estacao == NULL || strlen(nome_estacao) == 0) return;
 
     NoEstacao *atual = *lista;
     while (atual != NULL) {
-        if (strcmp(atual->nome, nome_estacao) == 0) return;
+        if (strcmp(atual->nome, nome_estacao) == 0) return; //confeere se ja nn existe uma estacao com o mesmo nome
         atual = atual->prox;
     }
     
-    NoEstacao *novo = malloc(sizeof(NoEstacao));
+    NoEstacao *novo = malloc(sizeof(NoEstacao)); //vai montando a lista de estacoes
     novo->nome = malloc((strlen(nome_estacao) + 1) * sizeof(char));
     strcpy(novo->nome, nome_estacao);
     novo->prox = *lista;
@@ -336,16 +340,16 @@ void inserir_estacao(NoEstacao **lista, char *nome_estacao, int *contador_estaco
     (*contador_estacoes)++; 
 }
 
-void inserir_par(NoPar **lista, int cod1, int cod2, int *contador_pares) {
+void inserir_par(NoDupla **lista, int cod1, int cod2, int *contador_pares) {
     if (cod1 == -1 || cod2 == -1) return;
 
-    NoPar *atual = *lista;
+    NoDupla *atual = *lista;
     while (atual != NULL) {
-        if (atual->cod1 == cod1 && atual->cod2 == cod2) return;
+        if (atual->cod1 == cod1 && atual->cod2 == cod2) return; //confeere se ja nn existe uma dupla de estacoes igual
         atual = atual->prox;
     }
     
-    NoPar *novo_par = malloc(sizeof(NoPar));
+    NoDupla *novo_par = malloc(sizeof(NoDupla)); //monta a lista 
     novo_par->cod1 = cod1;
     novo_par->cod2 = cod2;
     novo_par->prox = *lista;
@@ -364,10 +368,10 @@ void liberar_lista_estacoes(NoEstacao *lista) {
     }
 }
 
-void liberar_lista_pares(NoPar *lista) {
-    NoPar *atual = lista;
+void liberar_lista_pares(NoDupla *lista) {
+    NoDupla *atual = lista;
     while (atual != NULL) {
-        NoPar *aux = atual;
+        NoDupla *aux = atual;
         atual = atual->prox;
         free(aux);
     }
@@ -401,7 +405,7 @@ void funcionalidade_1(char *nome_csv, char *nome_bin) {
     }
 
     NoEstacao *lista_estacoes = NULL;
-    NoPar *lista_pares = NULL;
+    NoDupla *lista_pares = NULL;
 
     Registro reg;
     while (ler_linha_csv(csv, &reg)) {
@@ -429,27 +433,27 @@ void funcionalidade_1(char *nome_csv, char *nome_bin) {
 }
 
 void funcionalidade_2(char *nome_bin) {
-    FILE *bin = fopen(nome_bin, "rb"); // Abre para leitura binária
+    FILE *bin = fopen(nome_bin, "rb"); //Abre para leitura binária
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
 
     Cabecalho cab;
-    // Lê o status do arquivo (apenas 1 byte). 
+    //Lê o status do arquivo 
     if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
         printf("Falha no processamento do arquivo.\n");
         fclose(bin);
         return;
     }
 
-    // Pula o resto do cabeçalho para posicionar a leitura no byte 17 (início dos registros)
+    //Pula o resto do cabeçalho para posicionar a leitura no byte 17 (início dos registros)
     fseek(bin, 17, SEEK_SET);
 
     Registro reg;
     int registros_impressos = 0;
 
-    // Loop lendo todos os registros de 80 em 80 bytes
+    //Loop lendo todos os registros de 80 em 80 bytes
     while (ler_registro_bin(bin, &reg)) {
         // Se não estiver logicamente removido, imprime
         if (reg.removido == '0') {
@@ -459,7 +463,7 @@ void funcionalidade_2(char *nome_bin) {
         libera_registro(&reg); 
     }
 
-    // Caso o arquivo não possua nenhum registro válido (todos removidos ou vazio)
+    //Caso o arquivo não possua nenhum registro válido 
     if (registros_impressos == 0) {
         printf("Registro inexistente.\n");
     }
@@ -467,6 +471,7 @@ void funcionalidade_2(char *nome_bin) {
     fclose(bin);
 }
 
+//Estrutura e funcoes auxiliares ter criterios de busca
 typedef enum{
     CAMPO_COD_ESTACAO,
     CAMPO_NOME_ESTACAO,
@@ -476,17 +481,17 @@ typedef enum{
     CAMPO_DIST_PROX_ESTACAO,
     CAMPO_COD_LINHA_INTEGRA,
     CAMPO_COD_EST_INTEGRA,
-    CAMPO_INVALIDO
+    CAMPO_INVALIDO //default
 } TipoCampo;
 
 typedef struct {
     TipoCampo campo;
-    int valor_int;         
-    char valor_str[MAX_TAMANHO_STRING]; 
-    int eh_nulo;           
+    int valor_int; //o int que deve ser buscado
+    char valor_str[MAX_TAMANHO_STRING]; //o char que deve ser buscado
+    int nulo;  //flag caso ele queira um valor NULO (1)
 } CriteriodBusca;
 
-typedef struct {
+typedef struct { //caso tenha mais que um criterio
     CriteriodBusca criterios[MAX_CAMPOS_BUSCA];
     int num_criterios;
 } ConjuntoCriterios;
@@ -506,25 +511,25 @@ TipoCampo identifica_campo(const char *nome_campo) {
 int satisfaz_criterio(const Registro *reg, const CriteriodBusca *criterio) {
     switch (criterio->campo) {
         case CAMPO_COD_ESTACAO:
-            return (criterio->eh_nulo) ? (reg->codEstacao == -1) : (reg->codEstacao == criterio->valor_int);
+            return (criterio->nulo) ? (reg->codEstacao == -1) : (reg->codEstacao == criterio->valor_int);
         case CAMPO_NOME_ESTACAO:
-            if (criterio->eh_nulo) return (reg->tamNomeEstacao == 0 || reg->nomeEstacao == NULL);
-            if (reg->nomeEstacao == NULL) return 0;
-            return strcmp(reg->nomeEstacao, criterio->valor_str) == 0;
+            if (criterio->nulo) return (reg->tamNomeEstacao == 0 || reg->nomeEstacao == NULL);  //Verifica se o usuário busca um nome nulo
+            if (reg->nomeEstacao == NULL) return 0; //Se o usuário quer um nome específico, mas o registro não tem nome
+            return strcmp(reg->nomeEstacao, criterio->valor_str) == 0; //compara as strings 
         case CAMPO_COD_LINHA:
-            return (criterio->eh_nulo) ? (reg->codLinha == -1) : (reg->codLinha == criterio->valor_int);
+            return (criterio->nulo) ? (reg->codLinha == -1) : (reg->codLinha == criterio->valor_int);
         case CAMPO_NOME_LINHA:
-            if (criterio->eh_nulo) return (reg->tamNomeLinha == 0 || reg->nomeLinha == NULL);
+            if (criterio->nulo) return (reg->tamNomeLinha == 0 || reg->nomeLinha == NULL);
             if (reg->nomeLinha == NULL) return 0;
-            return strcmp(reg->nomeLinha, criterio->valor_str) == 0;
+            return strcmp(reg->nomeLinha, criterio->valor_str) == 0; //compara as strings
         case CAMPO_COD_PROX_ESTACAO:
-            return (criterio->eh_nulo) ? (reg->codProxEstacao == -1) : (reg->codProxEstacao == criterio->valor_int);
+            return (criterio->nulo) ? (reg->codProxEstacao == -1) : (reg->codProxEstacao == criterio->valor_int);
         case CAMPO_DIST_PROX_ESTACAO:
-            return (criterio->eh_nulo) ? (reg->distProxEstacao == -1) : (reg->distProxEstacao == criterio->valor_int);
+            return (criterio->nulo) ? (reg->distProxEstacao == -1) : (reg->distProxEstacao == criterio->valor_int);
         case CAMPO_COD_LINHA_INTEGRA:
-            return (criterio->eh_nulo) ? (reg->codLinhaIntegra == -1) : (reg->codLinhaIntegra == criterio->valor_int);
+            return (criterio->nulo) ? (reg->codLinhaIntegra == -1) : (reg->codLinhaIntegra == criterio->valor_int);
         case CAMPO_COD_EST_INTEGRA:
-            return (criterio->eh_nulo) ? (reg->codEstIntegra == -1) : (reg->codEstIntegra == criterio->valor_int);
+            return (criterio->nulo) ? (reg->codEstIntegra == -1) : (reg->codEstIntegra == criterio->valor_int);
         default:
             return 0;
     }
@@ -559,20 +564,20 @@ int le_criterios(ConjuntoCriterios *conjunto) {
             ScanQuoteString(valor_str); 
             
             if (strlen(valor_str) == 0) { 
-                crit->eh_nulo = 1;
+                crit->nulo = 1;
                 crit->valor_int = -1;
             } else {
-                crit->eh_nulo = 0;
+                crit->nulo = 0;
                 strcpy(crit->valor_str, valor_str);
             }
         } else {
             scanf("%s", valor_str);
             
             if (strcmp(valor_str, "NULO") == 0) {
-                crit->eh_nulo = 1;
+                crit->nulo = 1;
                 crit->valor_int = -1;
             } else {
-                crit->eh_nulo = 0;
+                crit->nulo = 0;
                 crit->valor_int = atoi(valor_str);
             }
         }
@@ -594,6 +599,7 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
         fclose(bin);
         return;
     }
+    
     //Executa as N buscas
     for (int busca_num = 0; busca_num < num_buscas; busca_num++) {
         ConjuntoCriterios conjunto;

@@ -45,9 +45,11 @@ void escreve_cabecalho(FILE *bin, Cabecalho *cab);
 
 //Funcoes dos registros
 void inicializa_registro(Registro *reg);
-void libera_registro(Registro *reg) ;
+void libera_registro(Registro *reg);
+void imprime_registro(Registro *reg);
 
 int ler_linha_csv(FILE *csv, Registro *reg);
+int ler_registro_bin(FILE *bin, Registro *reg);
 void escreve_registro_bin(FILE *bin, Registro *reg);
 
 //Funcionalidades:
