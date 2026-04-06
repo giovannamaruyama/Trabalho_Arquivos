@@ -631,32 +631,22 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
 }
 
 // Auxiliar para marcar como removido seguindo a lógica de Pilha (LIFO)
-// topo no cabeçalho = byte offset do registro removido mais recente (ou -1)
-// proximo no registro = RRN do próximo registro removido na pilha (ou -1)
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     char removido = '1';
  
-    // O campo proximo do registro recebe o RRN do antigo topo.
-    // Como topo guarda byte offset, convertemos para RRN (ou mantemos -1).
-    int proximo_rrn;
-    if (cab->topo == -1) {
-        proximo_rrn = -1;
-    } else {
-        proximo_rrn = (cab->topo - TAM_CABECALHO) / TAM_REGISTRO;
-    }
+    int proximo_rrn = cab->topo; 
  
-    long byte_offset_atual = TAM_CABECALHO + ((long)rrn_atual * TAM_REGISTRO);
+    long byte_offset_atual = 17 + ((long)rrn_atual * 80); 
     fseek(bin, byte_offset_atual, SEEK_SET);
- 
+    
     // 1. Escreve o marcador de removido ('1')
     fwrite(&removido, sizeof(char), 1, bin);
-    // 2. Escreve o RRN do próximo elemento da pilha (antigo topo convertido para RRN)
+    // 2. Escreve o RRN do próximo elemento da pilha
     fwrite(&proximo_rrn, sizeof(int), 1, bin);
- 
-    // Atualiza o topo no cabeçalho com o byte offset do registro recém-removido
-    cab->topo = (int)byte_offset_atual;
+    
+    // Atualiza o topo no cabeçalho com o RRN do registro recém-removido
+    cab->topo = rrn_atual; 
 }
- 
 void funcionalidade_4(char *nome_bin, int num_remocoes) {
     FILE *bin = fopen(nome_bin, "rb+");
     if (bin == NULL) {
