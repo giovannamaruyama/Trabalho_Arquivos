@@ -631,16 +631,9 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
 }
 
 
-// Auxiliar para marcar como removido LIFO
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     char removido = '1';
-    
-    int proximo_rrn;
-    if (cab->topo == -1) {
-        proximo_rrn = -1;
-    } else {
-        proximo_rrn = (cab->topo - 17) / 80; // TAM_CABECALHO / TAM_REGISTRO
-    }
+    int proximo_rrn = cab->topo; 
     
     long byte_offset_atual = 17 + ((long)rrn_atual * 80); 
     fseek(bin, byte_offset_atual, SEEK_SET);
@@ -648,38 +641,9 @@ void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     fwrite(&removido, sizeof(char), 1, bin);
     fwrite(&proximo_rrn, sizeof(int), 1, bin);
     
-    // Topo guarda o byte offset do registro removido
-    cab->topo = (int)byte_offset_atual; 
+    cab->topo = rrn_atual; 
 }
 
-// Função auxiliar para recalcular contadores ignorando registros logicamente removidos
-void recalcula_contadores(FILE *bin, Cabecalho *cab) {
-    fseek(bin, 17, SEEK_SET); // Volta pro início dos dados
-    Registro reg;
-    NoEstacao *lista_estacoes = NULL;
-    NoDupla *lista_pares = NULL;
-    
-    int cont_estacoes = 0;
-    int cont_pares = 0;
-
-    // Varre o arquivo reconstruindo os contadores válidos
-    while (ler_registro_bin(bin, &reg)) {
-        if (reg.removido == '0') {
-            if (reg.tamNomeEstacao > 0 && reg.nomeEstacao != NULL) {
-                inserir_estacao(&lista_estacoes, reg.nomeEstacao, &cont_estacoes);
-            }
-            inserir_par(&lista_pares, reg.codEstacao, reg.codProxEstacao, &cont_pares);
-        }
-        libera_registro(&reg);
-    }
-
-    liberar_lista_estacoes(lista_estacoes);
-    liberar_lista_pares(lista_pares);
-
-    // Atualiza o cabeçalho com os números reais
-    cab->nroEstacoes = cont_estacoes;
-    cab->nroParesEstacao = cont_pares;
-}
 
 void funcionalidade_4(char *nome_bin, int num_remocoes) {
     FILE *bin = fopen(nome_bin, "rb+"); // rb+ é obrigatório para não apagar o ficheiro
@@ -733,7 +697,7 @@ void funcionalidade_4(char *nome_bin, int num_remocoes) {
     }
     recalcula_contadores(bin, &cab);
     
-    cab.status = '1';
+    cab.status = '0'; //ATENÇÃO
     escreve_cabecalho(bin, &cab); 
     fflush(bin);
 
