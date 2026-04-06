@@ -25,9 +25,9 @@ int main() {
             break;
         
         case 3: 
-        int n;
-        scanf("%s %d", arquivo_entrada, &n);
-        funcionalidade_3(arquivo_entrada, n);
+        int m;
+        scanf("%s %d", arquivo_entrada, &m);
+        funcionalidade_3(arquivo_entrada, m);
         break;
         
         case 4: 
