@@ -634,10 +634,10 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     char removido = '1';
     
-    // O campo proximo recebe diretamente o antigo topo 
+    // O campo proximo recebe diretamente o antigo topo (pois ambos armazenam RRNs!)
     int proximo_rrn = cab->topo; 
     
-    // Para mover o cursor de gravação, continuamos precisando converter para Byte Offset.
+    // Retorna o ponteiro para o início do registro atual para sobrescrever
     long byte_offset_atual = 17 + ((long)rrn_atual * 80); 
     fseek(bin, byte_offset_atual, SEEK_SET);
     
@@ -648,7 +648,6 @@ void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     
     // Atualiza o topo no cabeçalho com o RRN do registro recém-removido
     cab->topo = rrn_atual; 
-
 }
 
 void funcionalidade_4(char *nome_bin, int num_remocoes) {
