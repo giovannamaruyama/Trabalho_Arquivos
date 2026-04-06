@@ -630,6 +630,36 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
     fclose(bin);
 }
 
+// Função auxiliar para recalcular contadores ignorando registros logicamente removidos
+void recalcula_contadores(FILE *bin, Cabecalho *cab) {
+    rewind(bin); // Limpa flags de erro e EOF
+    fseek(bin, 17, SEEK_SET); // Posiciona no byte 17
+    
+    Registro reg;
+    NoEstacao *lista_estacoes = NULL;
+    NoDupla *lista_pares = NULL;
+    
+    int cont_estacoes = 0;
+    int cont_pares = 0;
+
+    // Varre o arquivo reconstruindo os contadores válidos
+    while (ler_registro_bin(bin, &reg)) {
+        if (reg.removido == '0') {
+            if (reg.tamNomeEstacao > 0 && reg.nomeEstacao != NULL) {
+                inserir_estacao(&lista_estacoes, reg.nomeEstacao, &cont_estacoes);
+            }
+            inserir_par(&lista_pares, reg.codEstacao, reg.codProxEstacao, &cont_pares);
+        }
+        libera_registro(&reg);
+    }
+
+    liberar_lista_estacoes(lista_estacoes);
+    liberar_lista_pares(lista_pares);
+
+    // Atualiza o cabeçalho com os números reais validados
+    cab->nroEstacoes = cont_estacoes;
+    cab->nroParesEstacao = cont_pares;
+}
 
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     char removido = '1';
@@ -643,7 +673,6 @@ void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     
     cab->topo = rrn_atual; 
 }
-
 
 void funcionalidade_4(char *nome_bin, int num_remocoes) {
     FILE *bin = fopen(nome_bin, "rb+"); // rb+ é obrigatório para não apagar o ficheiro
@@ -695,9 +724,8 @@ void funcionalidade_4(char *nome_bin, int num_remocoes) {
             rrn_contador++;
         }
     }
-  
-    
-    cab.status = '0'; //ATENÇÃO
+    recalcula_contadores(bin, &cab);
+    cab.status = '1'; //ATENÇÃO
     escreve_cabecalho(bin, &cab); 
     fflush(bin);
 
