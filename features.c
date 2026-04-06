@@ -695,7 +695,7 @@ void funcionalidade_4(char *nome_bin, int num_remocoes) {
             rrn_contador++;
         }
     }
-    recalcula_contadores(bin, &cab);
+  
     
     cab.status = '0'; //ATENÇÃO
     escreve_cabecalho(bin, &cab); 
