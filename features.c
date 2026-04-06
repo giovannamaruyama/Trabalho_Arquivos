@@ -316,7 +316,7 @@ typedef struct NoEstacao {
     struct NoEstacao *prox;
 } NoEstacao;
 
-typedef struct Nodupla {
+typedef struct NoDupla {
     int cod1;
     int cod2;
     struct NoDupla *prox;
