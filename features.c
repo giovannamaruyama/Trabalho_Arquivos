@@ -630,24 +630,55 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
     fclose(bin);
 }
 
-// Função de remoção cirúrgica: altera apenas os 5 bytes iniciais
+
+// Auxiliar para marcar como removido LIFO
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     char removido = '1';
     
-    // O campo proximo recebe diretamente o antigo topo (pois ambos armazenam RRNs!)
-    int proximo_rrn = cab->topo; 
+    int proximo_rrn;
+    if (cab->topo == -1) {
+        proximo_rrn = -1;
+    } else {
+        proximo_rrn = (cab->topo - 17) / 80; // TAM_CABECALHO / TAM_REGISTRO
+    }
     
-    // Retorna o ponteiro para o início do registro atual para sobrescrever
     long byte_offset_atual = 17 + ((long)rrn_atual * 80); 
     fseek(bin, byte_offset_atual, SEEK_SET);
     
-    // 1. Escreve o marcador de removido ('1')
     fwrite(&removido, sizeof(char), 1, bin);
-    // 2. Escreve o RRN do próximo elemento da pilha
     fwrite(&proximo_rrn, sizeof(int), 1, bin);
     
-    // Atualiza o topo no cabeçalho com o RRN do registro recém-removido
-    cab->topo = rrn_atual; 
+    // Topo guarda o byte offset do registro removido
+    cab->topo = (int)byte_offset_atual; 
+}
+
+// Função auxiliar para recalcular contadores ignorando registros logicamente removidos
+void recalcula_contadores(FILE *bin, Cabecalho *cab) {
+    fseek(bin, 17, SEEK_SET); // Volta pro início dos dados
+    Registro reg;
+    NoEstacao *lista_estacoes = NULL;
+    NoDupla *lista_pares = NULL;
+    
+    int cont_estacoes = 0;
+    int cont_pares = 0;
+
+    // Varre o arquivo reconstruindo os contadores válidos
+    while (ler_registro_bin(bin, &reg)) {
+        if (reg.removido == '0') {
+            if (reg.tamNomeEstacao > 0 && reg.nomeEstacao != NULL) {
+                inserir_estacao(&lista_estacoes, reg.nomeEstacao, &cont_estacoes);
+            }
+            inserir_par(&lista_pares, reg.codEstacao, reg.codProxEstacao, &cont_pares);
+        }
+        libera_registro(&reg);
+    }
+
+    liberar_lista_estacoes(lista_estacoes);
+    liberar_lista_pares(lista_pares);
+
+    // Atualiza o cabeçalho com os números reais
+    cab->nroEstacoes = cont_estacoes;
+    cab->nroParesEstacao = cont_pares;
 }
 
 void funcionalidade_4(char *nome_bin, int num_remocoes) {
@@ -700,9 +731,8 @@ void funcionalidade_4(char *nome_bin, int num_remocoes) {
             rrn_contador++;
         }
     }
-
-    // Fim da operação: Atualiza o cabeçalho completo (topo e status '1')
-    // Certifica-te que a tua função escreve_cabecalho usa fwrite campo a campo
+    recalcula_contadores(bin, &cab);
+    
     cab.status = '1';
     escreve_cabecalho(bin, &cab); 
     fflush(bin);
