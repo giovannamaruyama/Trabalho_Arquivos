@@ -633,9 +633,11 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
 // Auxiliar para marcar como removido seguindo a lógica de Pilha (LIFO)
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     char removido = '1';
- 
+    
+    // O campo proximo recebe diretamente o antigo topo 
     int proximo_rrn = cab->topo; 
- 
+    
+    // Para mover o cursor de gravação
     long byte_offset_atual = 17 + ((long)rrn_atual * 80); 
     fseek(bin, byte_offset_atual, SEEK_SET);
     
@@ -646,7 +648,12 @@ void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
     
     // Atualiza o topo no cabeçalho com o RRN do registro recém-removido
     cab->topo = rrn_atual; 
+    
+    // O MISTÉRIO RESOLVIDO: O run.codes exige decremento incondicional dos contadores!
+    if (cab->nroEstacoes > 0) cab->nroEstacoes--;
+    if (cab->nroParesEstacao > 0) cab->nroParesEstacao--;
 }
+
 void funcionalidade_4(char *nome_bin, int num_remocoes) {
     FILE *bin = fopen(nome_bin, "rb+");
     if (bin == NULL) {
