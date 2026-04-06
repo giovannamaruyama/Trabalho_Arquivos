@@ -30,7 +30,13 @@ int main() {
         funcionalidade_3(arquivo_entrada, n);
         break;
         
-            
+        case 4: 
+            int n;
+            scanf("%s %d", arquivo_entrada, &n);
+            funcionalidade_4(arquivo_entrada, n);
+            break;
+
+
         default:
             printf("Funcionalidade invalida.\n");
             break;

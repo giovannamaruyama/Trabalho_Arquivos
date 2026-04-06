@@ -629,3 +629,80 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
     
     fclose(bin);
 }
+
+// Auxiliar para marcar como removido seguindo a lógica de Pilha (LIFO)
+void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual) {
+    char removido = '1';
+    int proximo_rrn = cab->topo;
+
+    fseek(bin, TAM_CABECALHO + (rrn_atual * TAM_REGISTRO), SEEK_SET);
+
+    // 1. Escreve o marcador de removido
+    fwrite(&removido, sizeof(char), 1, bin);
+    // 2. Escreve o RRN do próximo elemento da pilha (antigo topo)
+    fwrite(&proximo_rrn, sizeof(int), 1, bin);
+
+    // Atualiza o topo na memória
+    cab->topo = rrn_atual;
+}
+
+void funcionalidade_4(char *nome_bin, int num_remocoes) {
+    FILE *bin = fopen(nome_bin, "rb+");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    Cabecalho cab;
+    if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(bin);
+        return;
+    }
+
+    // Lê o restante do cabeçalho campo a campo
+    fread(&cab.topo, sizeof(int), 1, bin);
+    fread(&cab.proxRRN, sizeof(int), 1, bin);
+    fread(&cab.nroEstacoes, sizeof(int), 1, bin);
+    fread(&cab.nroParesEstacao, sizeof(int), 1, bin);
+
+    // Inicia a funcionalidade: Status = '0' (inconsistente)
+    cab.status = '0';
+    fseek(bin, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, bin);
+
+    for (int i = 0; i < num_remocoes; i++) {
+        ConjuntoCriterios conjunto;
+        if (le_criterios(&conjunto) != 0) break;
+
+        // Volta para o início dos registros (byte 17)
+        fseek(bin, TAM_CABECALHO, SEEK_SET);
+        
+        Registro reg;
+        int rrn_contador = 0;
+
+        // Loop de busca: se fread não retornar o tamanho esperado, é fim de arquivo
+        while (ler_registro_bin(bin, &reg)) {
+            // Se não estiver removido, verifica os critérios
+            if (reg.removido == '0') {
+                if (satisfaz_todos_criterios(&reg, &conjunto)) {
+                    
+                    remove_logicamente(bin, &cab, rrn_contador);
+                    
+                    // Após o fwrite na remove_logicamente, o ponteiro do arquivo mudou.
+                    // Precisamos voltar para o final do registro atual para continuar a busca sequencial.
+                    fseek(bin, TAM_CABECALHO + ((rrn_contador + 1) * TAM_REGISTRO), SEEK_SET);
+                }
+            }
+            libera_registro(&reg);
+            rrn_contador++;
+        }
+    }
+
+    // Finaliza: Atualiza o cabeçalho completo e volta o status para '1'
+    cab.status = '1';
+    escreve_cabecalho(bin, &cab);
+
+    fclose(bin);
+    BinarioNaTela(nome_bin);
+}

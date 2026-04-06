@@ -55,6 +55,7 @@ void escreve_registro_bin(FILE *bin, Registro *reg);
 //Funcionalidades:
 void funcionalidade_1(char *nome_csv, char *nome_bin);
 void funcionalidade_2(char *nome_bin);
-void funcionalidade_3(char *nome_bin, int num_buscas) ;
+void funcionalidade_3(char *nome_bin, int num_buscas);
+void funcionalidade_4(char *nome_bin, int num_remocoes);
 
 #endif
