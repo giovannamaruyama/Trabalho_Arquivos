@@ -922,16 +922,3 @@ void funcionalidade_6(char *nome_bin, int num_iter) {
             libera_registro(&reg);
             rrn++;
         }
-
-        if (encontrados == 0) {
-            printf("Registro inexistente.\n");
-        }
-    }
-
-    recalcula_contadores(bin, &cab);
-    cab.status = '1';
-    escreve_cabecalho(bin, &cab);
-    
-    fclose(bin);
-    BinarioNaTela(nome_bin);
-}
