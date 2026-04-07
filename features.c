@@ -733,193 +733,322 @@ void funcionalidade_4(char *nome_bin, int num_remocoes) {
     BinarioNaTela(nome_bin);
 }
 
-
-typedef struct {
-    TipoCampo campo;                     /**< Campo alvo da atualização */
-    int       valor_int;                 /**< Novo valor inteiro (se aplicável) */
-    char      valor_str[MAX_TAMANHO_STRING]; /**< Novo valor string (se aplicável) */
-    int       nulo;                      /**< 1 se o novo valor é NULO */
-} CampoAtualizacao;
-
-
-typedef struct {
-    CampoAtualizacao atualizacoes[MAX_CAMPOS_BUSCA]; /**< Vetor de atualizações */
-    int              num_atualizacoes;               /**< Quantidade de atualizações */
-} ConjuntoAtualizacoes;
-
-
-int le_atualizacoes(ConjuntoAtualizacoes *conj) {
-    int p;
-    if (scanf("%d", &p) != 1) return -1;
-
-    conj->num_atualizacoes = 0;
-
-    for (int i = 0; i < p; i++) {
-        char nome_campo[MAX_TAMANHO_STRING];
-        char valor_str[MAX_TAMANHO_STRING];
-
-        // Blindagem contra buffer overflow (%255s)
-        if (scanf("%255s", nome_campo) != 1) return -1;
-
-        TipoCampo campo = identifica_campo(nome_campo);
-        if (campo == CAMPO_INVALIDO) return -1;
-
-        CampoAtualizacao *atu = &conj->atualizacoes[conj->num_atualizacoes];
-        atu->campo = campo;
-
-        /* Strings: lê com aspas duplas; inteiros: lê normalmente */
-        if (campo == CAMPO_NOME_ESTACAO || campo == CAMPO_NOME_LINHA) {
-            ScanQuoteString(valor_str);
-
-            if (strlen(valor_str) == 0) { /* NULO */
-                atu->nulo      = 1;
-                atu->valor_int = -1;
-                atu->valor_str[0] = '\0';
-            } else {
-                atu->nulo = 0;
-                strcpy(atu->valor_str, valor_str);
-            }
-        } else {
-            if (scanf("%255s", valor_str) != 1) return -1;
-
-            if (strcmp(valor_str, "NULO") == 0) {
-                atu->nulo      = 1;
-                atu->valor_int = -1;
-            } else {
-                atu->nulo      = 0;
-                atu->valor_int = atoi(valor_str);
-            }
-        }
-
-        conj->num_atualizacoes++;
-    }
-
-    return 0;
+static int le_int_ou_nulo(void) {
+    char buf[MAX_TAMANHO_STRING];
+    scanf("%s", buf);
+    if (strcmp(buf, "NULO") == 0) return -1;
+    return atoi(buf);
 }
-
-void aplica_atualizacoes(Registro *reg, const ConjuntoAtualizacoes *conj) {
-    for (int i = 0; i < conj->num_atualizacoes; i++) {
-        const CampoAtualizacao *atu = &conj->atualizacoes[i];
-
-        switch (atu->campo) {
-
-            case CAMPO_COD_ESTACAO:
-                reg->codEstacao = atu->nulo ? -1 : atu->valor_int;
-                break;
-
-            case CAMPO_NOME_ESTACAO:
-                free(reg->nomeEstacao);
-                if (atu->nulo) {
-                    reg->nomeEstacao    = NULL;
-                    reg->tamNomeEstacao = 0;
-                } else {
-                    int tam = (int)strlen(atu->valor_str);
-                    reg->nomeEstacao = (char *)malloc((tam + 1) * sizeof(char));
-                    if (reg->nomeEstacao != NULL) {
-                        strcpy(reg->nomeEstacao, atu->valor_str);
-                        reg->tamNomeEstacao = tam;
-                    }
-                }
-                break;
-
-            case CAMPO_COD_LINHA:
-                reg->codLinha = atu->nulo ? -1 : atu->valor_int;
-                break;
-
-            case CAMPO_NOME_LINHA:
-                free(reg->nomeLinha);
-                if (atu->nulo) {
-                    reg->nomeLinha    = NULL;
-                    reg->tamNomeLinha = 0;
-                } else {
-                    int tam = (int)strlen(atu->valor_str);
-                    reg->nomeLinha = (char *)malloc((tam + 1) * sizeof(char));
-                    if (reg->nomeLinha != NULL) {
-                        strcpy(reg->nomeLinha, atu->valor_str);
-                        reg->tamNomeLinha = tam;
-                    }
-                }
-                break;
-
-            case CAMPO_COD_PROX_ESTACAO:
-                reg->codProxEstacao = atu->nulo ? -1 : atu->valor_int;
-                break;
-
-            case CAMPO_DIST_PROX_ESTACAO:
-                reg->distProxEstacao = atu->nulo ? -1 : atu->valor_int;
-                break;
-
-            case CAMPO_COD_LINHA_INTEGRA:
-                reg->codLinhaIntegra = atu->nulo ? -1 : atu->valor_int;
-                break;
-
-            case CAMPO_COD_EST_INTEGRA:
-                reg->codEstIntegra = atu->nulo ? -1 : atu->valor_int;
-                break;
-
-            default:
-                break;
-        }
+ 
+/* Lê um campo string da stdin (entre aspas / NULO) para o registro */
+static void le_string_campo(int *tam, char **ptr) {
+    char buf[MAX_TAMANHO_STRING];
+    ScanQuoteString(buf);
+    if (strlen(buf) == 0) {
+        *tam = 0;
+        *ptr = NULL;
+    } else {
+        *tam = (int)strlen(buf);
+        *ptr = malloc((*tam + 1) * sizeof(char));
+        strcpy(*ptr, buf);
     }
 }
-
-void funcionalidade_6(char *nome_bin, int num_iter){
+ 
+/* Lê os dados de um novo registro da entrada padrão */
+static void le_novo_registro(Registro *reg) {
+    inicializa_registro(reg);
+ 
+    reg->codEstacao      = le_int_ou_nulo();
+    le_string_campo(&reg->tamNomeEstacao, &reg->nomeEstacao);
+    reg->codLinha        = le_int_ou_nulo();
+    le_string_campo(&reg->tamNomeLinha,   &reg->nomeLinha);
+    reg->codProxEstacao  = le_int_ou_nulo();
+    reg->distProxEstacao = le_int_ou_nulo();
+    reg->codLinhaIntegra = le_int_ou_nulo();
+    reg->codEstIntegra   = le_int_ou_nulo();
+ 
+    reg->removido = '0';
+    reg->proximo  = -1;
+}
+ 
+void funcionalidade_5(char *nome_bin, int num_insercoes) {
     FILE *bin = fopen(nome_bin, "rb+");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-
+ 
+    /* Lê cabeçalho completo */
     Cabecalho cab;
     if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
         printf("Falha no processamento do arquivo.\n");
         fclose(bin);
         return;
     }
-    fread(&cab.topo,             sizeof(int), 1, bin);
-    fread(&cab.proxRRN,          sizeof(int), 1, bin);
-    fread(&cab.nroEstacoes,      sizeof(int), 1, bin);
-    fread(&cab.nroParesEstacao,  sizeof(int), 1, bin);
-
+    fread(&cab.topo,            sizeof(int), 1, bin);
+    fread(&cab.proxRRN,         sizeof(int), 1, bin);
+    fread(&cab.nroEstacoes,     sizeof(int), 1, bin);
+    fread(&cab.nroParesEstacao, sizeof(int), 1, bin);
+ 
     /* Marca arquivo como inconsistente durante a operação */
     cab.status = '0';
     fseek(bin, 0, SEEK_SET);
     fwrite(&cab.status, sizeof(char), 1, bin);
     fflush(bin);
-
-    for (int iter = 0; iter < num_iter; iter++) {
-
-        ConjuntoCriterios criterios;
-        if (le_criterios(&criterios) != 0) break;
-
-        ConjuntoAtualizacoes atualizacoes;
-        if (le_atualizacoes(&atualizacoes) != 0) break;
-
-        /* Usa o número literal 17 que foi o padrão validado anteriormente */
-        fseek(bin, 17, SEEK_SET);
-
-        Registro reg;
-        int rrn        = 0;
-        int encontrados = 0;
-
-        while (ler_registro_bin(bin, &reg)) {
-            if (reg.removido == '0' &&
-                satisfaz_todos_criterios(&reg, &criterios)) {
-
-                aplica_atualizacoes(&reg, &atualizacoes);
-
-                /* Calcula a posição exata e escreve (80 bytes por registro) */
-                long pos_reg = 17L + (long)rrn * 80L;
-                fseek(bin, pos_reg, SEEK_SET);
-                escreve_registro_bin(bin, &reg);
-
-                /* Retorna ao ponto de varredura seguro */
-                fseek(bin, 17L + (long)(rrn + 1) * 80L, SEEK_SET);
-
-                encontrados++;
+ 
+    /* Listas auxiliares para recalcular contadores após todas as inserções */
+    NoEstacao *lista_estacoes = NULL;
+    NoDupla   *lista_pares    = NULL;
+ 
+    /* Reconta contadores a partir do estado atual do arquivo antes de inserir */
+    fseek(bin, TAM_CABECALHO, SEEK_SET);
+    {
+        Registro tmp;
+        while (ler_registro_bin(bin, &tmp)) {
+            if (tmp.removido == '0') {
+                if (tmp.tamNomeEstacao > 0 && tmp.nomeEstacao != NULL)
+                    inserir_estacao(&lista_estacoes, tmp.nomeEstacao, &cab.nroEstacoes);
+                inserir_par(&lista_pares, tmp.codEstacao, tmp.codProxEstacao, &cab.nroParesEstacao);
             }
+            libera_registro(&tmp);
+        }
+        /* Zera para reconstrução limpa depois das inserções */
+        cab.nroEstacoes     = 0;
+        cab.nroParesEstacao = 0;
+        liberar_lista_estacoes(lista_estacoes);
+        liberar_lista_pares(lista_pares);
+        lista_estacoes = NULL;
+        lista_pares    = NULL;
+    }
+ 
+    for (int i = 0; i < num_insercoes; i++) {
+        Registro reg;
+        le_novo_registro(&reg);
+ 
+        long byte_offset_destino;
+ 
+        if (cab.topo != -1) {
+            /*──────────────────────────────────────────────
+             * Há espaço reaproveitável: usa o topo da pilha
+             *──────────────────────────────────────────────*/
+            int rrn_reuso = cab.topo;
+            byte_offset_destino = (long)TAM_CABECALHO + (long)rrn_reuso * TAM_REGISTRO;
+ 
+            /* Lê o campo "proximo" do registro removido para atualizar o topo */
+            fseek(bin, byte_offset_destino + 1 /* pula 'removido' */, SEEK_SET);
+            int proximo_removido;
+            fread(&proximo_removido, sizeof(int), 1, bin);
+ 
+            /* Avança o topo da pilha */
+            cab.topo = proximo_removido;
+ 
+            /* Escreve o novo registro no espaço reutilizado */
+            fseek(bin, byte_offset_destino, SEEK_SET);
+            escreve_registro_bin(bin, &reg);
+ 
+        } else {
+            /*──────────────────────────────────────────────
+             * Pilha vazia: insere no final do arquivo
+             *──────────────────────────────────────────────*/
+            byte_offset_destino = (long)TAM_CABECALHO + (long)cab.proxRRN * TAM_REGISTRO;
+            fseek(bin, byte_offset_destino, SEEK_SET);
+            escreve_registro_bin(bin, &reg);
+            cab.proxRRN++;
+        }
+ 
+        /* Atualiza contadores com o novo registro */
+        if (reg.tamNomeEstacao > 0 && reg.nomeEstacao != NULL)
+            inserir_estacao(&lista_estacoes, reg.nomeEstacao, &cab.nroEstacoes);
+        inserir_par(&lista_pares, reg.codEstacao, reg.codProxEstacao, &cab.nroParesEstacao);
+ 
+        libera_registro(&reg);
+    }
+ 
+    /* Reconstrói contadores completos varrendo o arquivo todo */
+    recalcula_contadores(bin, &cab);
+ 
+    liberar_lista_estacoes(lista_estacoes);
+    liberar_lista_pares(lista_pares);
+ 
+    /* Finaliza: escreve cabeçalho consistente */
+    cab.status = '1';
+    escreve_cabecalho(bin, &cab);
+    fflush(bin);
+    fclose(bin);
+ 
+    BinarioNaTela(nome_bin);
+}
 
+static void aplica_atualizacao(Registro *reg, const ConjuntoCriterios *atualizacao) {
+    for (int i = 0; i < atualizacao->num_criterios; i++) {
+        const CriteriodBusca *upd = &atualizacao->criterios[i];
+ 
+        switch (upd->campo) {
+            case CAMPO_COD_ESTACAO:
+                reg->codEstacao = upd->nulo ? -1 : upd->valor_int;
+                break;
+            case CAMPO_NOME_ESTACAO:
+                free(reg->nomeEstacao);
+                if (upd->nulo) {
+                    reg->nomeEstacao    = NULL;
+                    reg->tamNomeEstacao = 0;
+                } else {
+                    reg->tamNomeEstacao = (int)strlen(upd->valor_str);
+                    reg->nomeEstacao    = malloc((reg->tamNomeEstacao + 1) * sizeof(char));
+                    strcpy(reg->nomeEstacao, upd->valor_str);
+                }
+                break;
+            case CAMPO_COD_LINHA:
+                reg->codLinha = upd->nulo ? -1 : upd->valor_int;
+                break;
+            case CAMPO_NOME_LINHA:
+                free(reg->nomeLinha);
+                if (upd->nulo) {
+                    reg->nomeLinha    = NULL;
+                    reg->tamNomeLinha = 0;
+                } else {
+                    reg->tamNomeLinha = (int)strlen(upd->valor_str);
+                    reg->nomeLinha    = malloc((reg->tamNomeLinha + 1) * sizeof(char));
+                    strcpy(reg->nomeLinha, upd->valor_str);
+                }
+                break;
+            case CAMPO_COD_PROX_ESTACAO:
+                reg->codProxEstacao = upd->nulo ? -1 : upd->valor_int;
+                break;
+            case CAMPO_DIST_PROX_ESTACAO:
+                reg->distProxEstacao = upd->nulo ? -1 : upd->valor_int;
+                break;
+            case CAMPO_COD_LINHA_INTEGRA:
+                reg->codLinhaIntegra = upd->nulo ? -1 : upd->valor_int;
+                break;
+            case CAMPO_COD_EST_INTEGRA:
+                reg->codEstIntegra = upd->nulo ? -1 : upd->valor_int;
+                break;
+            default:
+                break;
+        }
+    }
+}
+ 
+/* Calcula quantos bytes o registro ocupa (sem o padding de lixo) */
+static int tamanho_util_registro(const Registro *reg) {
+    /* campos fixos: removido(1) + proximo(4) + 6×int(24) + 2×tamString(8) = 37 bytes
+       mais as strings variáveis */
+    return 1 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4 + 4
+           + reg->tamNomeEstacao
+           + reg->tamNomeLinha;
+}
+ 
+/* Reescreve o registro atualizado no byte_offset indicado, preenchendo o
+   espaço restante até TAM_REGISTRO com '$'. */
+static void reescreve_registro_atualizado(FILE *bin, long byte_offset, Registro *reg) {
+    fseek(bin, byte_offset, SEEK_SET);
+ 
+    int bytes_escritos = 0;
+ 
+    fwrite(&reg->removido,          sizeof(char), 1, bin); bytes_escritos += 1;
+    fwrite(&reg->proximo,           sizeof(int),  1, bin); bytes_escritos += 4;
+    fwrite(&reg->codEstacao,        sizeof(int),  1, bin); bytes_escritos += 4;
+    fwrite(&reg->codLinha,          sizeof(int),  1, bin); bytes_escritos += 4;
+    fwrite(&reg->codProxEstacao,    sizeof(int),  1, bin); bytes_escritos += 4;
+    fwrite(&reg->distProxEstacao,   sizeof(int),  1, bin); bytes_escritos += 4;
+    fwrite(&reg->codLinhaIntegra,   sizeof(int),  1, bin); bytes_escritos += 4;
+    fwrite(&reg->codEstIntegra,     sizeof(int),  1, bin); bytes_escritos += 4;
+ 
+    fwrite(&reg->tamNomeEstacao,    sizeof(int),  1, bin); bytes_escritos += 4;
+    if (reg->tamNomeEstacao > 0 && reg->nomeEstacao != NULL) {
+        fwrite(reg->nomeEstacao, sizeof(char), reg->tamNomeEstacao, bin);
+        bytes_escritos += reg->tamNomeEstacao;
+    }
+ 
+    fwrite(&reg->tamNomeLinha,      sizeof(int),  1, bin); bytes_escritos += 4;
+    if (reg->tamNomeLinha > 0 && reg->nomeLinha != NULL) {
+        fwrite(reg->nomeLinha, sizeof(char), reg->tamNomeLinha, bin);
+        bytes_escritos += reg->tamNomeLinha;
+    }
+ 
+    /* Preenche lixo remanescente */
+    char lixo = LIXO;
+    while (bytes_escritos < TAM_REGISTRO) {
+        fwrite(&lixo, sizeof(char), 1, bin);
+        bytes_escritos++;
+    }
+}
+ 
+void funcionalidade_6(char *nome_bin, int num_atualizacoes) {
+    FILE *bin = fopen(nome_bin, "rb+");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+ 
+    /* Lê cabeçalho completo */
+    Cabecalho cab;
+    if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(bin);
+        return;
+    }
+    fread(&cab.topo,            sizeof(int), 1, bin);
+    fread(&cab.proxRRN,         sizeof(int), 1, bin);
+    fread(&cab.nroEstacoes,     sizeof(int), 1, bin);
+    fread(&cab.nroParesEstacao, sizeof(int), 1, bin);
+ 
+    /* Marca arquivo como inconsistente durante a operação */
+    cab.status = '0';
+    fseek(bin, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, bin);
+    fflush(bin);
+ 
+    for (int i = 0; i < num_atualizacoes; i++) {
+        /* 1. Lê critérios de BUSCA (igual à funcionalidade 3) */
+        ConjuntoCriterios busca;
+        if (le_criterios(&busca) != 0) break;
+ 
+        /* 2. Lê campos a ATUALIZAR (reutiliza a mesma estrutura de critérios) */
+        ConjuntoCriterios atualizacao;
+        if (le_criterios(&atualizacao) != 0) break;
+ 
+        /* 3. Varre o arquivo procurando registros que satisfaçam a busca */
+        fseek(bin, TAM_CABECALHO, SEEK_SET);
+        Registro reg;
+        int rrn = 0;
+ 
+        while (ler_registro_bin(bin, &reg)) {
+            if (reg.removido == '0' && satisfaz_todos_criterios(&reg, &busca)) {
+                long byte_offset = (long)TAM_CABECALHO + (long)rrn * TAM_REGISTRO;
+ 
+                /* Verifica se a atualização das strings cabe nos 80 bytes */
+                Registro reg_tmp = reg;
+                /* Copia ponteiros para evitar double-free na verificação */
+                reg_tmp.nomeEstacao = reg.nomeEstacao ? strdup(reg.nomeEstacao) : NULL;
+                reg_tmp.nomeLinha   = reg.nomeLinha   ? strdup(reg.nomeLinha)   : NULL;
+ 
+                aplica_atualizacao(&reg_tmp, &atualizacao);
+ 
+                if (tamanho_util_registro(&reg_tmp) <= TAM_REGISTRO) {
+                    /* Cabe: reescreve diretamente */
+                    reescreve_registro_atualizado(bin, byte_offset, &reg_tmp);
+                }
+                /* Se não couber, ignora a atualização (não previsto na spec,
+                   mas o arquivo já garante que não haverá truncamento) */
+ 
+                libera_registro(&reg_tmp);
+ 
+                /* Reposiciona para continuar a varredura a partir do próximo registro */
+                fseek(bin, TAM_CABECALHO + (long)(rrn + 1) * TAM_REGISTRO, SEEK_SET);
+            }
             libera_registro(&reg);
             rrn++;
         }
     }
+ 
+    /* Reconstrói contadores e finaliza o cabeçalho */
+    recalcula_contadores(bin, &cab);
+    cab.status = '1';
+    escreve_cabecalho(bin, &cab);
+    fflush(bin);
+    fclose(bin);
+ 
+    BinarioNaTela(nome_bin);
+}

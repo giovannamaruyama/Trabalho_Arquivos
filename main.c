@@ -1,5 +1,5 @@
 //Giovanna Maruyama - 16869489
-//Giovanni Torres Bullo
+//Giovanni Torres Bullo - 16869833
 
 #include "features.h"
 #include <stdio.h>
@@ -24,27 +24,30 @@ int main() {
             funcionalidade_2(arquivo_entrada);
             break;
         
-        case 3:{ 
-            int m;
-            scanf("%s %d", arquivo_entrada, &m);
-            funcionalidade_3(arquivo_entrada, m);
-            break;
-        }
-        case 4:{ 
+        case 3: 
+        int m;
+        scanf("%s %d", arquivo_entrada, &m);
+        funcionalidade_3(arquivo_entrada, m);
+        break;
+        
+        case 4: 
             int n;
             scanf("%s %d", arquivo_entrada, &n);
             funcionalidade_4(arquivo_entrada, n);
             break;
-        }
-        case 6: {
-            int num_iteracoes;
-            if (scanf("%s %d", arquivo_entrada, &num_iteracoes) != 2) {
-                break;
-            }
-            funcionalidade_6(arquivo_entrada, num_iteracoes);
+
+         case 5: 
+            int p;
+            scanf("%s %d", arquivo_entrada, &p);
+            funcionalidade_5(arquivo_entrada, p);
             break;
-        
-        }
+
+        case 6: 
+            int q;
+            scanf("%s %d", arquivo_entrada, &q);
+            funcionalidade_6(arquivo_entrada, q);
+            break;
+
         default:
             printf("Funcionalidade invalida.\n");
             break;
