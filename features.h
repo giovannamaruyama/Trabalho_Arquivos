@@ -57,5 +57,6 @@ void funcionalidade_1(char *nome_csv, char *nome_bin);
 void funcionalidade_2(char *nome_bin);
 void funcionalidade_3(char *nome_bin, int num_buscas);
 void funcionalidade_4(char *nome_bin, int num_remocoes);
+void funcionalidade_6(char *nome_bin, int num_iter);
 
 #endif

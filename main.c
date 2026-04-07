@@ -36,6 +36,14 @@ int main() {
             funcionalidade_4(arquivo_entrada, n);
             break;
         }
+        case 6: {
+            int num_iteracoes;
+            if (scanf("%s %d", arquivo_entrada, &num_iteracoes) != 2) {
+                break;
+            }
+            funcionalidade_6(arquivo_entrada, num_iteracoes);
+            break;
+        
 
         default:
             printf("Funcionalidade invalida.\n");
