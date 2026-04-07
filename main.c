@@ -44,7 +44,7 @@ int main() {
             funcionalidade_6(arquivo_entrada, num_iteracoes);
             break;
         
-
+        }
         default:
             printf("Funcionalidade invalida.\n");
             break;
