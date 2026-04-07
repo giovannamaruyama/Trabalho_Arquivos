@@ -863,7 +863,7 @@ void aplica_atualizacoes(Registro *reg, const ConjuntoAtualizacoes *conj) {
     }
 }
 
-void funcionalidade_6(char *nome_bin, int num_iter) {
+void funcionalidade_6(char *nome_bin, int num_iter){
     FILE *bin = fopen(nome_bin, "rb+");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -922,3 +922,4 @@ void funcionalidade_6(char *nome_bin, int num_iter) {
             libera_registro(&reg);
             rrn++;
         }
+    }
