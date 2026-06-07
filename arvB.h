@@ -1,8 +1,11 @@
+//Giovanna Maruyama - 16869489
+//Giovanni Torres Bullo - 16869833
+
 #ifndef ARVORE_B_H
 #define ARVORE_B_H
 #include "features.h"
 
-//constantes arore b
+//constantes arvore b
 #define TAM_CABECALHO_ARVORE_B 17    //tamanho cabeçalho: 17 bytes
 #define TAM_NO_ARVORE_B 53           //Tamanho nó: 53 bytes 
 #define ORDEM_ARVORE_B 4             //Ordem: n = 4 
