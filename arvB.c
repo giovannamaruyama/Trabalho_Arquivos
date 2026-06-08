@@ -238,19 +238,135 @@ void insere_em_no(NoArvoreB *no, int chave, int pr) {
     no->nroChaves++;
 }
 
-int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio) {
+int insere_chave_promovida(FILE *arv, int rrn_pai, int rrn_avo,int chave, int pr) {
+    
+    //verifica parâmetros
+    if (arv == NULL || rrn_pai == -1) {
+        return 0;
+    }
+    
+    //lê o pai
+    NoArvoreB pai = le_no_arvoreB(arv, rrn_pai);
+    
+    //caso 1: pai tem espaço
+    if (pai.nroChaves < MAX_CHAVES) {
+        //insere direto no pai
+        insere_em_no(&pai, chave, pr);
+        //escreve pai atualizado
+        escreve_no_arvoreB(arv, rrn_pai, &pai);
+        return 1;
+    }
+    
+    //caso 2: pai está cheio - split recursivo
+    NoArvoreB no_temp;
+    memcpy(&no_temp, &pai, sizeof(NoArvoreB));
+    no_temp.nroChaves = 4;
+    
+    //encontra posição para inserir a chave temporariamente
+    int pos = procura_posicao(&no_temp, chave);
+    
+    //desloca chaves para direita
+    for (int i = 3; i > pos; i--) {
+        no_temp.C[i] = no_temp.C[i-1];
+        no_temp.PR[i] = no_temp.PR[i-1];
+    }
+    
+    //insere chave temporariamente
+    no_temp.C[pos] = chave;
+    no_temp.PR[pos] = pr;
+    
+    //lê cabeçalho para split
+    CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
+    
+    //cria nó direito (reutiliza ou novo)
+    int rrn_novo = (cab.topo != -1) ? cab.topo : cab.proxRRN;
+    if (cab.topo != -1) {
+        NoArvoreB no_removido = le_no_arvoreB(arv, rrn_novo);
+        cab.topo = no_removido.proximo;
+    } else {
+        cab.proxRRN++;
+    }
+    
+    //cria estrutura nó direito
+    NoArvoreB no_dir;
+    inicializa_no_arvoreB(&no_dir, no_temp.tipoNo);
+    
+    //distribui 4 chaves em 2 nós
+    no_dir.C[0] = no_temp.C[3];
+    no_dir.PR[0] = no_temp.PR[3];
+    no_dir.nroChaves = 1;
+    
+    no_temp.C[2] = -1;
+    no_temp.PR[2] = -1;
+    no_temp.nroChaves = 2;
+    
+    //distribui filhos (5 filhos em nó com 4 chaves)
+    if (no_temp.tipoNo != -1) {  //se não é folha
+        no_dir.P[0] = no_temp.P[3];
+        no_dir.P[1] = no_temp.P[4];
+        no_dir.P[2] = -1;
+        no_dir.P[3] = -1;
+        
+        no_temp.P[3] = -1;
+        no_temp.P[4] = -1;
+    }
+    
+    //chave a promover
+    int chave_prom = no_temp.C[2];
+    int pr_prom = no_temp.PR[2];
+    
+    //escreve nós
+    escreve_no_arvoreB(arv, rrn_pai, &no_temp);
+    escreve_no_arvoreB(arv, rrn_novo, &no_dir);
+    
+    //se avó for raiz (não existe pai do pai)
+    if (rrn_avo == -1) {
+        //cria nova raiz acima
+        NoArvoreB raiz;
+        inicializa_no_arvoreB(&raiz, 0);  //tipoNo = 0
+        
+        raiz.C[0] = chave_prom;
+        raiz.PR[0] = pr_prom;
+        raiz.P[0] = rrn_pai; //pai esquerdo
+        raiz.P[1] = rrn_novo; //pai direito
+        raiz.nroChaves = 1;
+        
+        //escreve nova raiz
+        int rrn_raiz = escreve_no_arvoreB(arv, -1, &raiz);
+        
+        //atualiza cabeçalho
+        cab.noRaiz = rrn_raiz;
+        cab.nroNos += 2;
+        escreve_cabecalho_arvoreB(arv, &cab);
+        
+        return 1;
+    }
+    
+    //se avó existe e não for raiz, recursão
+    cab.nroNos += 2;
+    escreve_cabecalho_arvoreB(arv, &cab);
+    
+    //insere chave promovida no avó
+    return insere_chave_promovida(arv, rrn_avo, -1, chave_prom, pr_prom);
+}
+
+int split_no_arvoreB(FILE *arv, int rrn_pai, int rrn_avo, 
+                     NoArvoreB *no_cheio) {
+    
     //verifica parâmetros
     if (arv == NULL || no_cheio == NULL) {
         return -1;
     }
+    
     //verifica se nó realmente está cheio (4 chaves)
     if (no_cheio->nroChaves != 4) {
         return -1;
     }
-    //Le o cabecalho pra ver o status da pilha
+    
+    //lê cabeçalho para ver status da pilha
     CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
     
-    //Cria o no direito e reutiliza a pilha, se conseguir
+    //cria nó direito e reutiliza pilha se conseguir
     int rrn_novo;
     if (cab.topo != -1) {
         //reutiliza nó da pilha
@@ -263,7 +379,7 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio) {
         cab.proxRRN++;
     }
     
-    //Cria a estrutura do no direito
+    //cria estrutura do nó direito
     NoArvoreB no_direito;
     inicializa_no_arvoreB(&no_direito, no_cheio->tipoNo);
     
@@ -273,11 +389,11 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio) {
     //nó direito recebe as 2 últimas chaves
     no_direito.C[0] = no_cheio->C[3];
     no_direito.PR[0] = no_cheio->PR[3];
-    no_direito.C[1] = -1;  //segunda chave não é usada 
+    no_direito.C[1] = -1;
     no_direito.PR[1] = -1;
     no_direito.nroChaves = 1;
     
-    //Trata os filhos
+    //trata os filhos (5 filhos em nó com 4 chaves)
     if (no_cheio->tipoNo != -1) {  //se não é folha
         //nó direito recebe os últimos filhos
         no_direito.P[0] = no_cheio->P[3];
@@ -290,7 +406,7 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio) {
         no_cheio->P[4] = -1;
     }
     
-    //Chave promovida pro pai
+    //chave promovida para o pai
     int chave_promove = no_cheio->C[2];
     int pr_promove = no_cheio->PR[2];
     
@@ -298,23 +414,22 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio) {
     no_cheio->C[2] = -1;
     no_cheio->PR[2] = -1;
     
-    //Escreve o no esquerdo atualizado no arquivo
-    escreve_no_arvoreB(arv, -1, no_cheio);
+    //escreve nó esquerdo - captura o rrn
+    int rrn_esq = escreve_no_arvoreB(arv, -1, no_cheio);
     
-    //Escreve o no direito no arquivo
+    //escreve nó direito
     escreve_no_arvoreB(arv, rrn_novo, &no_direito);
     
-    //Insere a chave promovida no no pai 
+    //insere chave promovida no pai
     if (rrn_pai == -1) {
-        //se o pai é raiz,precisa sofrer split
-        //cria nova raiz
+        //pai não existe - cria nova raiz
         NoArvoreB raiz;
         inicializa_no_arvoreB(&raiz, 0);  //tipoNo = 0 (raiz)
         
         raiz.C[0] = chave_promove;
         raiz.PR[0] = pr_promove;
-        raiz.P[0] = rrn_pai;//aponta para nó esquerdo
-        raiz.P[1] = rrn_novo; //aponta para nó direito
+        raiz.P[0] = rrn_esq;     //Usa RRN do nó esquerdo
+        raiz.P[1] = rrn_novo;    //nó direito
         raiz.nroChaves = 1;
         
         //escreve nova raiz
@@ -322,28 +437,19 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio) {
         
         //atualiza cabeçalho com nova raiz
         cab.noRaiz = rrn_raiz;
-        cab.nroNos += 2; //adiciona 2 nós(esq e dir)
+        cab.nroNos += 2;  //adicionou 2 nós (esq e dir)
     } else {
-        //pai existe, insere chave no pai
-        NoArvoreB pai = le_no_arvoreB(arv, rrn_pai);
-  
-        //verifica se pai tem espaço
-        if (pai.nroChaves < MAX_CHAVES) {
-            //insere no pai
-            insere_em_no(&pai, chave_promove, pr_promove);
-            escreve_no_arvoreB(arv, rrn_pai, &pai);
-            cab.nroNos++;
-        } else {
-            //ARRUMAR ISSO (INCOMPLETO)
-            //pai também está cheio, recursão (não implementada aqui)
-            //TODO: recursão para split do pai
-            cab.nroNos++;
-        }
+        //pai existe - usa função auxiliar recursiva
+        //não repete o split, usa a função que trata recursão
+        insere_chave_promovida(arv, rrn_pai, rrn_avo, 
+                              chave_promove, pr_promove);
+        cab.nroNos += 2;
     }
-    //Atualiza o CABEÇALHO
+    
+    //atualiza cabeçalho
     escreve_cabecalho_arvoreB(arv, &cab);
     
-    //Retorna o rrn da Direita
+    //retorna rrn da direita
     return rrn_novo;
 }
 
@@ -352,12 +458,13 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
     if (arv == NULL || pr < 0) {
         return 0;
     }
-    //Le o cabecalho
+    //lê cabeçalho
     CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
-    //marca arquivo como inconsistente 
+    
+    //marca arquivo como inconsistente durante operação
     atualiza_status_arvoreB(arv, '0');
     
-    //caso 1: arvore vazia
+    //caso 1: árvore vazia
     if (cab.noRaiz == -1) {
         //cria raiz (primeira chave)
         NoArvoreB raiz;
@@ -382,11 +489,10 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         return 1;
     }
     
-    //caso 2: arvore nao vazia
-    //desce ate a folha apropriada
+    //caso 2: árvore não vazia desce até a folha 
     int rrn_atual = cab.noRaiz;
     int rrn_pai = -1;
-    int idx_no_pai = 0;
+    int rrn_avo = -1;  //rastreia avó
     
     while (rrn_atual != -1) {
         //lê nó atual
@@ -397,7 +503,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
             return 0;
         }
         
-        //verifica se chave já existe (duplicata)
+        //verifica se chave já existe
         int dummy;
         if (busca_em_no(&no, chave, &dummy)) {
             //chave duplicada
@@ -411,9 +517,10 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         }
         
         //não é folha, desce para filho
-        rrn_pai = rrn_atual;
-        idx_no_pai = procura_posicao(&no, chave);
-        rrn_atual = no.P[idx_no_pai];
+        rrn_avo = rrn_pai;      //atualiza avó
+        rrn_pai = rrn_atual;    //atualiza pai
+        int pos = procura_posicao(&no, chave);
+        rrn_atual = no.P[pos];
     }
     
     //insere na folha
@@ -421,7 +528,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
     
     //verifica se folha tem espaço
     if (folha.nroChaves < MAX_CHAVES) {
-        //se a folha tiver espaco insere direto na folha
+        //folha tem espaço, insere direto
         insere_em_no(&folha, chave, pr);
         
         //escreve folha atualizada
@@ -435,11 +542,11 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         fflush(arv);
         return 1;
     } else {
-        //se a folha estiver cheia da split
+        //folha está cheia, faz split
         NoArvoreB no_temp;
         memcpy(&no_temp, &folha, sizeof(NoArvoreB));
         no_temp.nroChaves = 4;
-
+        
         //insere a nova chave temporariamente
         int pos = procura_posicao(&no_temp, chave);
         for (int i = 3; i > pos; i--) {
@@ -449,8 +556,8 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         no_temp.C[pos] = chave;
         no_temp.PR[pos] = pr;
         
-        //faz split
-        split_no_arvoreB(arv, rrn_pai, idx_no_pai, &no_temp);
+        //faz split com avó 
+        split_no_arvoreB(arv, rrn_pai, rrn_avo, &no_temp);
         
         //atualiza cabeçalho
         cab.status = '1';
