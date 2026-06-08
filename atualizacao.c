@@ -1,7 +1,6 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
 #include "features.h"
-#include "operacao_dados.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>

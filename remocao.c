@@ -1,7 +1,10 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
 #include "features.h"
+#include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 void delete_from(char *nome_bin, int num_remocoes) {
     FILE *bin = fopen(nome_bin, "rb+"); 

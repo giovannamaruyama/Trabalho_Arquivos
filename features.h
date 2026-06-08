@@ -98,6 +98,14 @@ typedef struct {
     int PR[3];
     int P[4];
 } NoArvoreB;
+
+//Funcionalidades do trabalho 1:
+void create_table(char *nome_csv, char *nome_bin) ;
+void select_from(char *nome_bin);
+void select_from_where(char *nome_bin, int num_buscas);
+void delete_from(char *nome_bin, int num_remocoes);
+void insert_into(char *nome_bin, int num_insercoes) ;
+void update_table(char *nome_bin, int num_atualizacoes);
  
 //Registros
  

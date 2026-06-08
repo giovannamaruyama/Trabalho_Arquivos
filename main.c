@@ -14,43 +14,47 @@ int main() {
     }
 
     switch(func) {
-        case 1: //cria arq binário a partir de csv
+        case 1: //funcionalidade 1 cria arq binário a partir de csv
             scanf("%s %s", arquivo_entrada, arquivo_saida);
-            funcionalidade_1(arquivo_entrada, arquivo_saida);
+            create_table(arquivo_entrada, arquivo_saida);
             break;
             
-        case 2: //exibe todos os registros ativos
+        case 2: //funcionalidade 2 exibe todos os registros ativos
             scanf("%s", arquivo_entrada);
-            funcionalidade_2(arquivo_entrada);
+            select_from(arquivo_entrada);
             break;
         
-        case 3: //busca com m criterios
-        int m;
-        scanf("%s %d", arquivo_entrada, &m);
-        funcionalidade_3(arquivo_entrada, m);
-        break;
-        
-        case 4: //remocao logica
+        case 3: //funcionalidade 3 busca com m criterios
+            int m;
+            scanf("%s %d", arquivo_entrada, &m);
+            select_from_where(arquivo_entrada, m);
+            break;
+            
+        case 4: //funcionalidade 4 remocao logica
             int n;
             scanf("%s %d", arquivo_entrada, &n);
-            funcionalidade_4(arquivo_entrada, n);
+            delete_from(arquivo_entrada, n);
             break;
 
-         case 5: //insercao com reaproveitamento
+         case 5: //funcionalidade 5 insercao com reaproveitamento
             int p;
             scanf("%s %d", arquivo_entrada, &p);
-            funcionalidade_5(arquivo_entrada, p);
+            insert_into(arquivo_entrada, p);
             break;
 
         case 6: 
-            int q; //atualizacao
+            int q; //funcionalidade 6 atualizacao
             scanf("%s %d", arquivo_entrada, &q);
-            funcionalidade_6(arquivo_entrada, q);
+            update_table(arquivo_entrada, q);
             break;
 
+        case 7:
+
+            break;
         default:
             printf("Funcionalidade invalida.\n");
             break;
+        
 
     }
 
