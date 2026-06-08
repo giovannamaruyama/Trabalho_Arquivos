@@ -593,6 +593,128 @@ int busca_em_no(NoArvoreB *no, int chave, int *pr) {
     return 0;
 }
  
+//Marca nó como logicamente removido e o empilha na lista de removidos
+//Empilha o rrn na pilha de removidos do cabeçalho (campo topo)
+//Apenas os campos relacionados ao encadeamento são atualizados;
+//os demais bytes do nó permanecem os mesmos
+void remove_logicamente_no_arvoreB(FILE *arv, int rrn, CabecalhoArvoreB *cab) {
+    //verifica parâmetros
+    if (arv == NULL || cab == NULL || rrn < 0) {
+        return;
+    }
+ 
+    //lê o nó a ser removido
+    NoArvoreB no = le_no_arvoreB(arv, rrn);
+ 
+    //marca o nó como removido
+    no.removido = '1';
+ 
+    //encadeia na pilha: próximo aponta para o antigo topo
+    no.proximo = cab->topo;
+ 
+    //atualiza o topo da pilha para apontar para este nó
+    cab->topo = rrn;
+ 
+    //decrementa o número de nós ativos
+    cab->nroNos--;
+ 
+    //escreve o nó atualizado no arquivo (apenas removido e proximo mudam)
+    escreve_no_arvoreB(arv, rrn, &no);
+ 
+    //atualiza o cabeçalho no arquivo
+    escreve_cabecalho_arvoreB(arv, cab);
+}
+
+//Retorna o RRN de um nó logicamente removido para reutilização (desempilha da pilha)
+//Se não houver nós removidos (topo == -1), retorna -1
+//Atualiza o cabeçalho (campo topo) após o desempilhamento
+//O lixo que permanece no nó e que não é sobrescrito deve ser
+//identificado pelo caractere 'S' (conforme especificação)
+int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab) {
+    //verifica parâmetros
+    if (arv == NULL || cab == NULL) {
+        return -1;
+    }
+ 
+    //verifica se existe algum nó removido na pilha
+    if (cab->topo == -1) {
+        //pilha vazia, nenhum nó disponível para reutilização
+        return -1;
+    }
+ 
+    //salva o rrn do topo (nó a ser reutilizado)
+    int rrn_reutilizado = cab->topo;
+ 
+    //lê o nó removido para obter o encadeamento
+    NoArvoreB no_removido = le_no_arvoreB(arv, rrn_reutilizado);
+ 
+    //desempilha: atualiza topo para o próximo da pilha
+    cab->topo = no_removido.proximo;
+ 
+    //atualiza cabeçalho no arquivo
+    escreve_cabecalho_arvoreB(arv, cab);
+ 
+    //retorna o rrn disponível para reutilização
+    return rrn_reutilizado;
+}
+
+//Constrói o índice Árvore-B percorrendo o arquivo de dados registro a registro
+//Apenas registros não logicamente removidos têm suas chaves inseridas no índice
+//A inserção é feita uma a uma, usando inserir_arvoreB para cada registro válido
+//Retorna 1 em caso de sucesso e 0 em caso de erro
+int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
+    //verifica parâmetros
+    if (arv_dados == NULL || arv_indice == NULL) {
+        return 0;
+    }
+ 
+    //lê cabeçalho do arquivo de dados para obter metadados
+    CabecalhoArquivo cab_dados;
+    fseek(arv_dados, 0, SEEK_SET);
+ 
+    //lê campo a campo conforme especificação do trabalho introdutório
+    fread(&cab_dados.status,   sizeof(char), 1, arv_dados);
+    fread(&cab_dados.topo,     sizeof(int),  1, arv_dados);
+    fread(&cab_dados.proxRRN,  sizeof(int),  1, arv_dados);
+    fread(&cab_dados.nroReg,   sizeof(int),  1, arv_dados);
+ 
+    //percorre todos os registros do arquivo de dados pelo RRN
+    for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
+ 
+        //calcula posição do registro no arquivo de dados
+        long byte_offset = TAM_CABECALHO + ((long)rrn * TAM_REGISTRO);
+        fseek(arv_dados, byte_offset, SEEK_SET);
+ 
+        //lê campo removido (1 byte)
+        char removido;
+        fread(&removido, sizeof(char), 1, arv_dados);
+ 
+        //ignora registros logicamente removidos
+        if (removido == '1') {
+            continue;
+        }
+ 
+        //lê campo codEstacao (chave de busca)
+        int codEstacao;
+        fread(&codEstacao, sizeof(int), 1, arv_dados);
+ 
+        //ignora registros com codEstacao nulo (-1)
+        if (codEstacao == -1) {
+            continue;
+        }
+ 
+        //insere par (chave, rrn) no índice árvore-B
+        //rrn é o ponteiro para o registro no arquivo de dados (PR)
+        int resultado = inserir_arvoreB(arv_indice, codEstacao, rrn);
+        if (resultado == 0) {
+            //falha na inserção
+            return 0;
+        }
+    }
+ 
+    return 1;
+}
+
 //busca na arvore-b
 int buscar_arvoreB(FILE *arv, int chave, int *pr) {
     //verifica os parametros de entrada
