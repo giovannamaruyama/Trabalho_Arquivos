@@ -60,15 +60,6 @@ int ler_registro_bin(FILE *bin, Registro *reg);
 void escreve_registro_bin(FILE *bin, Registro *reg);
 void reescreve_registro_atualizado(FILE *bin, long byte_offset, Registro *reg);
 void le_novo_registro(Registro *reg);
-
-//lógica de Busca e Critérios
-TipoCampo identifica_campo(const char *nome_campo);
-int satisfaz_criterio(const Registro *reg, const CriteriodBusca *criterio);
-int satisfaz_todos_criterios(const Registro *reg, const ConjuntoCriterios *conjunto);
-int le_criterios(ConjuntoCriterios *conjunto);
-
-//atualizacao
-void aplica_atualizacao(Registro *reg, const ConjuntoCriterios *atualizacao);
 int tamanho_util_registro(const Registro *reg);
 
 #endif 
