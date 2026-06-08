@@ -40,7 +40,7 @@ FILE* abrir_arvoreB(char *nome_arquivo, char *modo) {
         return NULL;
     }
     
-    //VERIFICA SE ARQUIVO TEM TAMANHO MÍNIMO (PELO MENOS CABEÇALHO)
+    //Verifica se o arquivo tem tamanho minimo, pelo menos o cabecalho
     fseek(arv, 0, SEEK_END);
     long tamanho = ftell(arv);
     rewind(arv);
@@ -59,7 +59,7 @@ FILE* abrir_arvoreB(char *nome_arquivo, char *modo) {
 //fecha arquivo Árvore-B e atualiza status para 1 (consistente)
 void fechar_arvoreB(FILE *arv, char *nome_arquivo) {
     if (arv == NULL) return;
-    //atualiza status para '1' (consistente)
+    //atualiza status para 1 consistente
     atualiza_status_arvoreB(arv, '1');
     fflush(arv);
 
@@ -71,11 +71,11 @@ void fechar_arvoreB(FILE *arv, char *nome_arquivo) {
 
 //Inicializa cabeçalho com valores padrão (árvore vazia)
 void inicializa_cabecalho_arvoreB(CabecalhoArvoreB *cab) {
-    cab->status = '0';      //arquivo inconsistente no início
-    cab->noRaiz = -1;       //arvore vazia
-    cab->topo = -1;         //sem nós removidos
-    cab->proxRRN = 0;       //próximo RRN a usar
-    cab->nroNos = 0;        //Quantidade de nós = 0
+    cab->status = '0'; //arquivo inconsistente no início
+    cab->noRaiz = -1;  //arvore vazia
+    cab->topo = -1;  //sem nós removidos
+    cab->proxRRN = 0; //próximo RRN a usar
+    cab->nroNos = 0; //Quantidade de nós = 0
 }
  
 //Lê cabeçalho do arquivo (posição 0, 17 bytes)
@@ -86,11 +86,11 @@ CabecalhoArvoreB le_cabecalho_arvoreB(FILE *arv) {
     fseek(arv, 0, SEEK_SET);
     
     //lê campo a campo para evitar padding
-    fread(&cab.status,      sizeof(char), 1, arv);
-    fread(&cab.noRaiz,      sizeof(int),  1, arv);
-    fread(&cab.topo,        sizeof(int),  1, arv);
-    fread(&cab.proxRRN,     sizeof(int),  1, arv);
-    fread(&cab.nroNos,      sizeof(int),  1, arv);
+    fread(&cab.status, sizeof(char), 1, arv);
+    fread(&cab.noRaiz,sizeof(int),  1, arv);
+    fread(&cab.topo,sizeof(int),  1, arv);
+    fread(&cab.proxRRN,sizeof(int),  1, arv);
+    fread(&cab.nroNos,sizeof(int),  1, arv);
     
     //retorna o cabeçalho preenchido
     return cab;
@@ -119,10 +119,10 @@ void atualiza_status_arvoreB(FILE *arv, char status) {
  
 //Inicializa nó com valores padrão
 void inicializa_no_arvoreB(NoArvoreB *no, int tipo) {
-    no->removido = '0';     //não está removido
-    no->proximo = -1;       //sem próximo na pilha
-    no->tipoNo = tipo;      //tipo definido
-    no->nroChaves = 0;      //começa sem chaves
+    no->removido = '0'; //não está removido
+    no->proximo = -1;  //sem próximo na pilha
+    no->tipoNo = tipo;//tipo definido
+    no->nroChaves = 0; //começa sem chaves
     
     //inicializa chaves com -1 (ausente)
     for (int i = 0; i < MAX_CHAVES; i++) {
