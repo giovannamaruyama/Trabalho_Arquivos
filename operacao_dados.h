@@ -1,4 +1,5 @@
-#ifndef OPERACAO_DADOS_H
+//Giovanna Maruyama - 16869489
+//Giovanni Torres Bullo - 16869833#ifndef OPERACAO_DADOS_H
 #define OPERACAO_DADOS_H
 
 //Funcionalidades:

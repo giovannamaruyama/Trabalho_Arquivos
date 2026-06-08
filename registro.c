@@ -1,4 +1,5 @@
-#include <stdio.h>
+//Giovanna Maruyama - 16869489
+//Giovanni Torres Bullo - 16869833#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "features.h"

@@ -1,3 +1,5 @@
+//Giovanna Maruyama - 16869489
+//Giovanni Torres Bullo - 16869833
 #include "features.h"
 #include <string.h>
 

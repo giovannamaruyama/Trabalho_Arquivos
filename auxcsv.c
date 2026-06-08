@@ -1,4 +1,5 @@
-#include "auxcsv.h"
+//Giovanna Maruyama - 16869489
+//Giovanni Torres Bullo - 16869833#include "auxcsv.h"
 #include "cabecalho.h"
 #include "registro.h"
 #include <stdlib.h>
