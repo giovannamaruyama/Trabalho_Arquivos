@@ -1,8 +1,8 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
-
 #ifndef OPERACAO_DADOS_H
 #define OPERACAO_DADOS_H
+
 
 //Funcionalidades:
 void create_table(char *nome_csv, char *nome_bin); //Cria arquivo binario a partir de csv

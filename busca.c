@@ -3,6 +3,104 @@
 #include "features.h"
 #include <string.h>
 
+//funcionalidade 2: exibição dos registros ativos
+void select_from(char *nome_bin) {
+    FILE *bin = fopen(nome_bin, "rb");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+ 
+    //Lê o cabeçalho 
+    Cabecalho cab = le_cabecalho(bin);
+    if (cab.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(bin);
+        return;
+    }
+ 
+    //Posiciona no início dos registros (byte 17)
+    fseek(bin, TAM_CABECALHO, SEEK_SET);
+ 
+    Registro reg;
+    int registros_impressos = 0;
+ 
+    // Varre sequencialmente todos os registros
+    while (ler_registro_bin(bin, &reg)) {
+        // Apenas registros ativos (removido == '0') são exibidos
+        if (reg.removido == '0') {
+            imprime_registro(&reg);
+            registros_impressos++;
+        }
+        //o ponteiro já está posicionado no próximo registro.
+        libera_registro(&reg);
+    }
+ 
+    if (registros_impressos == 0) {
+        printf("Registro inexistente.\n");
+    }
+ 
+    fclose(bin);
+}
+
+//funcionalidade 3: busca com n criterios 
+void select_from_where(char *nome_bin, int num_buscas) {
+    FILE *bin = fopen(nome_bin, "rb");
+    if (bin == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    
+    // Lê o cabeçalho 
+    Cabecalho cab = le_cabecalho(bin);
+    if (cab.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(bin);
+        return;
+    }
+
+    // Executa as N buscas solicitadas
+    for (int busca_num = 0; busca_num < num_buscas; busca_num++) {
+        ConjuntoCriterios conjunto;
+        if (le_criterios(&conjunto) != 0) break;
+        
+        //Verifica se é busca por codEstacao único
+        int busca_cod_estacao = busca_por_cod_estacao_unico(&conjunto);
+        
+        //Posiciona no início dos registros
+        fseek(bin, TAM_CABECALHO, SEEK_SET);
+        
+        Registro reg;
+        int encontrados = 0;
+        
+        // Varre o arquivo sequencialmente
+        while (ler_registro_bin(bin, &reg)) {
+            // Apenas registros ativos são considerados
+            if (reg.removido == '0') {
+                if (satisfaz_todos_criterios(&reg, &conjunto)) {
+                    imprime_registro(&reg);
+                    encontrados++;
+                    
+                    //para após encontrar
+                    if (busca_cod_estacao) {
+                        libera_registro(&reg);
+                        break;
+                    }
+                }
+            }
+        
+            libera_registro(&reg);
+        }
+        
+        if (encontrados == 0) {
+            printf("Registro inexistente.\n");
+        }
+ 
+        printf("\n");
+    }
+    
+    fclose(bin);
+}
 
 TipoCampo identifica_campo(const char *nome_campo) {
     if (strcmp(nome_campo, "codEstacao") == 0) return CAMPO_COD_ESTACAO;
