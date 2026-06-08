@@ -79,9 +79,7 @@ typedef struct {
     int num_atualizacoes;
 } ConjuntoAtualizacoes;
  
-/* ═══════════════════════════════════════════════════════
- * ESTRUTURAS - ÁRVORE-B (Trabalho 2)
- * ═══════════════════════════════════════════════════════ */
+//stuct da arvore-b
  
 typedef struct {
     char status;
@@ -101,24 +99,7 @@ typedef struct {
     int P[4];
 } NoArvoreB;
  
-//Funcionalidades  
-// Trabalho 1 (Arquivo de Dados)
-void funcionalidade_1(char *nome_csv, char *nome_bin);
-void funcionalidade_2(char *nome_bin);
-void funcionalidade_3(char *nome_bin, int num_buscas);
-void funcionalidade_4(char *nome_bin, int num_remocoes);
-void funcionalidade_5(char *nome_bin, int num_insercoes);
-void funcionalidade_6(char *nome_bin, int num_atualizacoes);
- 
-// Trabalho 2 (Árvore-B)
-void funcionalidade_7(char *arquivo_dados, char *arquivo_indice);
-void funcionalidade_8(char *arquivo_dados, char *arquivo_indice, int num_buscas);
-void funcionalidade_9(char *arquivo_dados, char *arquivo_indice, int num_remocoes);
-void funcionalidade_10(char *arquivo_dados, char *arquivo_indice, int num_insercoes);
- 
-/* ═══════════════════════════════════════════════════════
- * PROTÓTIPOS - REGISTRO
- * ═══════════════════════════════════════════════════════ */
+//Registros
  
 void inicializa_registro(Registro *reg);
 void libera_registro(Registro *reg);
@@ -128,9 +109,7 @@ void escreve_registro_bin(FILE *bin, Registro *reg);
 void le_novo_registro(Registro *reg);
 void reescreve_registro_atualizado(FILE *bin, long byte_offset, Registro *reg);
  
-/* ═══════════════════════════════════════════════════════
- * PROTÓTIPOS - CABEÇALHO
- * ═══════════════════════════════════════════════════════ */
+//Cabeçalho
  
 void inicializa_cabecalho(Cabecalho *cab);
 void escreve_cabecalho(FILE *bin, Cabecalho *cab);
@@ -140,9 +119,7 @@ void inserir_par(NoDupla **lista, int cod1, int cod2, int *contador_pares);
 void liberar_lista_estacoes(NoEstacao *lista);
 void liberar_lista_pares(NoDupla *lista);
  
-/* ═══════════════════════════════════════════════════════
- * PROTÓTIPOS - CRITÉRIOS E BUSCA
- * ═══════════════════════════════════════════════════════ */
+//Funções de critérios e busca 
  
 TipoCampo identifica_campo(const char *nome_campo);
 int satisfaz_criterio(const Registro *reg, const CriteriodBusca *criterio);
@@ -153,19 +130,10 @@ int le_atualizacoes(ConjuntoAtualizacoes *conjunto);
 void aplica_atualizacao(Registro *reg, const ConjuntoAtualizacoes *atualizacao);
 void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual);
  
-/* ═══════════════════════════════════════════════════════
- * PROTÓTIPOS - UTILIDADES
- * ═══════════════════════════════════════════════════════ */
- 
+//Funções do auxcsv 
 void BinarioNaTela(char *arquivo);
 void ScanQuoteString(char *str);
 int ler_linha_csv(FILE *csv, Registro *reg);
 void recalcula_contadores(FILE *bin, Cabecalho *cab);
- 
-/* ═══════════════════════════════════════════════════════
- * PROTÓTIPOS - ÁRVORE-B
- * ═══════════════════════════════════════════════════════ */
- 
-// (Serão adicionados após implementação)
  
 #endif /* FEATURES_H */
