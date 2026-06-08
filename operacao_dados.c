@@ -7,7 +7,7 @@
 #include <string.h>
 #include <ctype.h>
 
-void funcionalidade_1(char *nome_csv, char *nome_bin) {
+void create_table(char *nome_csv, char *nome_bin) {
     FILE *csv = fopen(nome_csv, "r"); 
     if (csv == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -70,7 +70,7 @@ void funcionalidade_1(char *nome_csv, char *nome_bin) {
 }
 
 //funcionalidade 2: exibição dos registros ativos
-void funcionalidade_2(char *nome_bin) {
+void select_from(char *nome_bin) {
     FILE *bin = fopen(nome_bin, "rb");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -110,7 +110,7 @@ void funcionalidade_2(char *nome_bin) {
 }
 
 //funcionalidade 3: busca com n criterios 
-void funcionalidade_3(char *nome_bin, int num_buscas) {
+void select_from_where(char *nome_bin, int num_buscas) {
     FILE *bin = fopen(nome_bin, "rb");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -168,7 +168,7 @@ void funcionalidade_3(char *nome_bin, int num_buscas) {
     fclose(bin);
 }
 
-void funcionalidade_4(char *nome_bin, int num_remocoes) {
+void delete_from(char *nome_bin, int num_remocoes) {
     FILE *bin = fopen(nome_bin, "rb+"); 
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -226,7 +226,7 @@ void funcionalidade_4(char *nome_bin, int num_remocoes) {
 }
 
 
-void funcionalidade_5(char *nome_bin, int num_insercoes) {
+void insert_into(char *nome_bin, int num_insercoes) {
     FILE *bin = fopen(nome_bin, "rb+");
     if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
@@ -297,7 +297,7 @@ void funcionalidade_5(char *nome_bin, int num_insercoes) {
     BinarioNaTela(nome_bin);
 }
 
-void funcionalidade_6(char *nome_bin, int num_atualizacoes) {
+void update_table(char *nome_bin, int num_atualizacoes) {
     // Abre em (leitura e escrita)
     FILE *bin = fopen(nome_bin, "rb+");
     if (bin == NULL) {
