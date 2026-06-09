@@ -1,5 +1,6 @@
 //Giovanna Maruyama - 16869489
-//Giovanni Torres Bullo - 16869833#ifndef AUXCSV_H
+//Giovanni Torres Bullo - 16869833
+#ifndef AUXCSV_H
 #define AUXCSV_H
 
 #include <stdio.h>
