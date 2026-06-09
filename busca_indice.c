@@ -70,8 +70,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             
             //armazena critério
             criterios.criterios[criterios.num_criterios].campo = tipo;
-            strncpy(criterios.criterios[criterios.num_criterios].valor_str, 
-                   valor_str, MAX_TAMANHO_STRING);
+            strncpy(criterios.criterios[criterios.num_criterios].valor_str, valor_str, MAX_TAMANHO_STRING);
             
             //converte valor se for número
             if (strcmp(valor_str, "NULO") == 0) {
@@ -85,96 +84,98 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             criterios.num_criterios++;
         }
         
-        //se busca é por codEstacao, usa índicce, caso contrário: busca sequencial
+        //se busca é por codEstacao, usa índice, caso contrário: busca sequencial
         
         int encontrou = 0;
         
         //verifica se é busca por codEstacao único
         int cod_estacao = -1;
-        int uso_indice = 0;
         
-        if (criterios.num_criterios == 1 && 
-            criterios.criterios[0].campo == CAMPO_COD_ESTACAO &&
-            criterios.criterios[0].nulo == 0) {
+        if (criterios.num_criterios == 1 && criterios.criterios[0].campo == CAMPO_COD_ESTACAO && criterios.criterios[0].nulo == 0) {
             
             //usa índice
             cod_estacao = criterios.criterios[0].valor_int;
-            uso_indice = 1;
             
             //busca na árvore-b
             int rrn;
             if (buscar_arvoreB(arv_indice, cod_estacao, &rrn)) {
-                //encontrou! lê registro
-                Registro reg = le_registro_bin(arv_dados, rrn);
-                
-                //verifica se registro não está removido
-                if (reg.removido == '0') {
-                    //exibe registro
-                    printf("%d ", reg.codEstacao);
+                //se encontrou le o registro
+                Registro reg;
+                if (ler_registro_bin(arv_dados, &reg) != -1) {
                     
-                    if (reg.tamNomeEstacao == 0) {
-                        printf("NULO ");
-                    } else {
-                        printf("%s ", reg.nomeEstacao);
+                    //verifica se registro não está removido
+                    if (reg.removido == '0') {
+                        //exibe registro
+                        printf("%d ", reg.codEstacao);
+                        
+                        if (reg.tamNomeEstacao == 0) {
+                            printf("NULO ");
+                        } else {
+                            printf("%s ", reg.nomeEstacao);
+                        }
+                        
+                        if (reg.codLinha == -1) {
+                            printf("NULO ");
+                        } else {
+                            printf("%d ", reg.codLinha);
+                        }
+                        
+                        if (reg.tamNomeLinha == 0) {
+                            printf("NULO ");
+                        } else {
+                            printf("%s ", reg.nomeLinha);
+                        }
+                        
+                        if (reg.codProxEstacao == -1) {
+                            printf("NULO ");
+                        } else {
+                            printf("%d ", reg.codProxEstacao);
+                        }
+                        
+                        if (reg.distProxEstacao == -1) {
+                            printf("NULO ");
+                        } else {
+                            printf("%d ", reg.distProxEstacao);
+                        }
+                        
+                        if (reg.codLinhaIntegra == -1) {
+                            printf("NULO ");
+                        } else {
+                            printf("%d ", reg.codLinhaIntegra);
+                        }
+                        
+                        if (reg.codEstIntegra == -1) {
+                            printf("NULO\n");
+                        } else {
+                            printf("%d\n", reg.codEstIntegra);
+                        }
+                        
+                        encontrou = 1;
                     }
                     
-                    if (reg.codLinha == -1) {
-                        printf("NULO ");
-                    } else {
-                        printf("%d ", reg.codLinha);
-                    }
-                    
-                    if (reg.tamNomeLinha == 0) {
-                        printf("NULO ");
-                    } else {
-                        printf("%s ", reg.nomeLinha);
-                    }
-                    
-                    if (reg.codProxEstacao == -1) {
-                        printf("NULO ");
-                    } else {
-                        printf("%d ", reg.codProxEstacao);
-                    }
-                    
-                    if (reg.distProxEstacao == -1) {
-                        printf("NULO ");
-                    } else {
-                        printf("%d ", reg.distProxEstacao);
-                    }
-                    
-                    if (reg.codLinhaIntegra == -1) {
-                        printf("NULO ");
-                    } else {
-                        printf("%d ", reg.codLinhaIntegra);
-                    }
-                    
-                    if (reg.codEstIntegra == -1) {
-                        printf("NULO\n");
-                    } else {
-                        printf("%d\n", reg.codEstIntegra);
-                    }
-                    
-                    encontrou = 1;
+                    //libera memória
+                    if (reg.nomeEstacao != NULL) free(reg.nomeEstacao);
+                    if (reg.nomeLinha != NULL) free(reg.nomeLinha);
                 }
-                
-                //libera memória
-                if (reg.nomeEstacao != NULL) free(reg.nomeEstacao);
-                if (reg.nomeLinha != NULL) free(reg.nomeLinha);
             }
         } else {
             //busca por qualquer outro campo, começa lendo o cabeçalho
             Cabecalho cab_dados;
             fseek(arv_dados, 0, SEEK_SET);
-            fread(&cab_dados.status, sizeof(char), 1, arv_dados);
-            fread(&cab_dados.topo, sizeof(int), 1, arv_dados);
-            fread(&cab_dados.proxRRN, sizeof(int), 1, arv_dados);
-            fread(&cab_dados.nroReg, sizeof(int), 1, arv_dados);
+            fread(&cab_dados.status,          sizeof(char), 1, arv_dados);
+            fread(&cab_dados.topo,            sizeof(int),  1, arv_dados);
+            fread(&cab_dados.proxRRN,         sizeof(int),  1, arv_dados);
+            fread(&cab_dados.nroEstacoes,     sizeof(int),  1, arv_dados);
+            fread(&cab_dados.nroParesEstacao, sizeof(int),  1, arv_dados);
             
             //percorre todos os registros
             for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
                 
                 //lê registro
-                Registro reg = le_registro_bin(arv_dados, rrn);
+                Registro reg;
+                if (ler_registro_bin(arv_dados, &reg) == -1) {
+                    continue;
+                }
                 
                 //ignora registros removidos
                 if (reg.removido == '1') {
@@ -250,4 +251,3 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
     fechar_arvoreB(arv_indice, nome_indice);
     fclose(arv_dados);
 }
- 

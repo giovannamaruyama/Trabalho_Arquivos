@@ -2,6 +2,7 @@
 //Giovanni Torres Bullo - 16869833
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "features.h"
 #include "cabecalho.h"

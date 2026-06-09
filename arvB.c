@@ -593,10 +593,7 @@ int busca_em_no(NoArvoreB *no, int chave, int *pr) {
     return 0;
 }
  
-//Marca nó como logicamente removido e o empilha na lista de removidos
-//Empilha o rrn na pilha de removidos do cabeçalho (campo topo)
-//Apenas os campos relacionados ao encadeamento são atualizados;
-//os demais bytes do nó permanecem os mesmos
+//Marca nó como logicamente removido e o empilha na lista de removidos, empilha o rrn na pilha de removidos do cabeçalho
 void remove_logicamente_no_arvoreB(FILE *arv, int rrn, CabecalhoArvoreB *cab) {
     //verifica parâmetros
     if (arv == NULL || cab == NULL || rrn < 0) {
@@ -658,10 +655,7 @@ int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab) {
     return rrn_reutilizado;
 }
 
-//Constrói o índice Árvore-B percorrendo o arquivo de dados registro a registro
-//Apenas registros não logicamente removidos têm suas chaves inseridas no índice
-//A inserção é feita uma a uma, usando inserir_arvoreB para cada registro válido
-//Retorna 1 em caso de sucesso e 0 em caso de erro
+//Constrói o índice Árvore-B percorrendo o arquivo de dados registro a registrs, apenas egistros não logicamente removidos têm suas chaves inseridas no índice
 int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
     //verifica parâmetros
     if (arv_dados == NULL || arv_indice == NULL) {
@@ -669,15 +663,16 @@ int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
     }
  
     //lê cabeçalho do arquivo de dados para obter metadados
-    CabecalhoArquivo cab_dados;
+    Cabecalho cab_dados;
     fseek(arv_dados, 0, SEEK_SET);
- 
-    //lê campo a campo conforme especificação do trabalho introdutório
-    fread(&cab_dados.status,   sizeof(char), 1, arv_dados);
-    fread(&cab_dados.topo,     sizeof(int),  1, arv_dados);
-    fread(&cab_dados.proxRRN,  sizeof(int),  1, arv_dados);
-    fread(&cab_dados.nroReg,   sizeof(int),  1, arv_dados);
- 
+   
+    //le campo a campo conforme struct Cabecalho
+    fread(&cab_dados.status,sizeof(char), 1, arv_dados);
+    fread(&cab_dados.topo,sizeof(int),  1, arv_dados);
+    fread(&cab_dados.proxRRN,sizeof(int),  1, arv_dados);
+    fread(&cab_dados.nroEstacoes, sizeof(int),  1, arv_dados);
+    fread(&cab_dados.nroParesEstacao, sizeof(int),  1, arv_dados);
+   
     //percorre todos os registros do arquivo de dados pelo RRN
     for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
  
@@ -704,7 +699,6 @@ int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
         }
  
         //insere par (chave, rrn) no índice árvore-B
-        //rrn é o ponteiro para o registro no arquivo de dados (PR)
         int resultado = inserir_arvoreB(arv_indice, codEstacao, rrn);
         if (resultado == 0) {
             //falha na inserção
@@ -753,30 +747,4 @@ int buscar_arvoreB(FILE *arv, int chave, int *pr) {
     }
     //caso tenha percorrido ate a ultima folha e nn tiver encontrado
     return 0;
-}
- 
- //Imprime informações de um nó (debug)
-void imprime_no_arvoreB(NoArvoreB *no, int rrn) {
-    printf("=== Nó RRN %d ===\n", rrn);
-    printf("Removido: %c\n", no->removido);
-    printf("Tipo: %d\n", no->tipoNo);
-    printf("Chaves: %d\n", no->nroChaves);
-    for (int i = 0; i < no->nroChaves; i++) {
-        printf("  C[%d]=%d PR[%d]=%d\n", i, no->C[i], i, no->PR[i]);
-    }
-    printf("Filhos: ");
-    for (int i = 0; i <= no->nroChaves; i++) {
-        printf("P[%d]=%d ", i, no->P[i]);
-    }
-    printf("\n");
-}
- 
-//imprime cabeçalho da Árvore-B 
-void imprime_cabecalho_arvoreB(CabecalhoArvoreB *cab) {
-    printf("=== Cabeçalho Árvore-B ===\n");
-    printf("Status: %c\n", cab->status);
-    printf("Raiz: %d\n", cab->noRaiz);
-    printf("Topo (removidos): %d\n", cab->topo);
-    printf("Próximo RRN: %d\n", cab->proxRRN);
-    printf("Total de nós: %d\n", cab->nroNos);
 }
