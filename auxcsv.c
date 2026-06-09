@@ -2,6 +2,7 @@
 //Giovanni Torres Bullo - 16869833#include "auxcsv.h"
 #include "cabecalho.h"
 #include "registro.h"
+#nclude "features.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
