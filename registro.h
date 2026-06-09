@@ -2,53 +2,7 @@
 //Giovanni Torres Bullo - 16869833
 #ifndef REGISTRO_H
 #define REGISTRO_H
-
 #include <stdio.h>
-#define TAM_REGISTRO 80
-#define LIXO '$'
-#define MAX_CAMPOS_BUSCA 8
-#define MAX_TAMANHO_STRING 256
-
-typedef struct {
-    char removido;
-    int proximo;
-    int codEstacao;
-    int codLinha;
-    int codProxEstacao;
-    int distProxEstacao;
-    int codLinhaIntegra;
-    int codEstIntegra;
-    
-    int tamNomeEstacao;
-    char *nomeEstacao; 
-    
-    int tamNomeLinha;
-    char *nomeLinha;   
-} Registro;
-
-typedef enum {
-    CAMPO_COD_ESTACAO,
-    CAMPO_NOME_ESTACAO,
-    CAMPO_COD_LINHA,
-    CAMPO_NOME_LINHA,
-    CAMPO_COD_PROX_ESTACAO,
-    CAMPO_DIST_PROX_ESTACAO,
-    CAMPO_COD_LINHA_INTEGRA,
-    CAMPO_COD_EST_INTEGRA,
-    CAMPO_INVALIDO //default
-} TipoCampo;
-
-typedef struct {
-    TipoCampo campo;
-    int valor_int;                      // o int que deve ser buscado
-    char valor_str[MAX_TAMANHO_STRING]; // o char que deve ser buscado
-    int nulo;                           // flag caso ele queira um valor NULO (1)
-} CriteriodBusca;
-
-typedef struct { 
-    CriteriodBusca criterios[MAX_CAMPOS_BUSCA];
-    int num_criterios;
-} ConjuntoCriterios;
 
 //Gerenciamento de memória e inicialização
 void inicializa_registro(Registro *reg);
