@@ -105,7 +105,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             int rrn;
             if (buscar_arvoreB(arv_indice, cod_estacao, &rrn)) {
                 //encontrou! lê registro
-                Registro reg = le_registro_bin(arv_dados, rrn);
+                Registro reg = ler_registro_bin(arv_dados, rrn);
                 
                 //verifica se registro não está removido
                 if (reg.removido == '0') {
@@ -174,7 +174,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
                 
                 //lê registro
-                Registro reg = le_registro_bin(arv_dados, rrn);
+                Registro reg = ler_registro_bin(arv_dados, rrn);
                 
                 //ignora registros removidos
                 if (reg.removido == '1') {
