@@ -74,7 +74,7 @@ int nulo_csv(char *campo) {
 //converte o char em int
 int converte_csv(char *campo){
     if (nulo_csv(campo)){
-        return NULO;
+        return NULL;
     }
     return atoi(campo);
 }
