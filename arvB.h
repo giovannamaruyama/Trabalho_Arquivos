@@ -51,7 +51,7 @@ int procura_posicao(NoArvoreB *no, int chave);
 //Insercao
 int inserir_arvoreB(FILE *arv, int chave, int pr);
 
-int split_no_arvoreB(FILE *arv, int rrn_pai, int idx, NoArvoreB *no_cheio);
+int split_no_arvoreB(FILE *arv, int rrn_pai, int rrn_avo, NoArvoreB *no_cheio);
 
 void insere_em_no(NoArvoreB *no, int chave, int pr);
 
@@ -67,10 +67,5 @@ int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab);
 
 //Constroi arvore
 int construir_arvoreB(FILE *arv_dados, FILE *arv_indice);
-
-//Funcoes de imprimir
-void imprime_no_arvoreB(NoAvoreB *no,int RRN);
-void imprime_cabecalho_arvoreB(CabecalhoArvoreB *cab);
-
 
 #endif 
