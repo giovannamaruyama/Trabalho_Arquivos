@@ -2,7 +2,7 @@
 //Giovanni Torres Bullo - 16869833#include "auxcsv.h"
 #include "cabecalho.h"
 #include "registro.h"
-#nclude "features.h"
+#include "features.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -75,7 +75,7 @@ int nulo_csv(char *campo) {
 //converte o char em int
 int converte_csv(char *campo){
     if (nulo_csv(campo)){
-        return NULL;
+        return NULO;
     }
     return atoi(campo);
 }
