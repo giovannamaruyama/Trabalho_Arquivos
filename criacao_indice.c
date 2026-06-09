@@ -7,7 +7,7 @@
 
 //Cria um arquivo de índice Árvore-B para um arq binário existente e para cada registro não removido do arquivo de dados, insere codEstacao
 
-void funcionalidade7(char *nome_arq_dados, char *nome_arq_indice) {
+void funcionalidade_7(char *nome_arq_dados, char *nome_arq_indice) {
  
     //abre arquivo de dados em modo leitura binária
     FILE *arv_dados = fopen(nome_arq_dados, "rb");

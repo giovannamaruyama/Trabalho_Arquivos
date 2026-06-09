@@ -3,6 +3,9 @@
 
 #include "features.h"
 #include "indice.h"
+#include "cabecalho.h"
+#include "registro.h"
+#include "auxcsv.h"
 #include <stdio.h>
 
 int main() {

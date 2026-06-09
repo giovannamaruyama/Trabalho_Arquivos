@@ -25,6 +25,17 @@ void escreve_cabecalho(FILE *bin, Cabecalho *cab) {
     fwrite(&cab->nroParesEstacao, sizeof(int), 1, bin);
 }
 
+Cabecalho le_cabecalho(FILE *bin) {
+    Cabecalho cab;
+    fseek(bin, 0, SEEK_SET);
+    fread(&cab.status, sizeof(char), 1, bin);
+    fread(&cab.topo, sizeof(int),  1, bin);
+    fread(&cab.proxRRN,  sizeof(int),  1, bin);
+    fread(&cab.nroEstacoes, sizeof(int),  1, bin);
+    fread(&cab.nroParesEstacao, sizeof(int),  1, bin);
+    return cab;
+}
+
 //Listas para o header:
 
 void inserir_estacao(NoEstacao **lista, char *nome_estacao, int *contador_estacoes) {
