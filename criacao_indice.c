@@ -5,9 +5,8 @@
 #include "arvB.h"
 #include <string.h>
 
-//Cria um arquivo de índice Árvore-B para um arquivo de dados binário existente
-//Para cada registro não removido do arquivo de dados, insere sua chave (codEstacao)
-//e seu RRN no índice Árvore-B. Ao final, exibe o arquivo de índice com BinarioNaTela
+//Cria um arquivo de índice Árvore-B para um arq binário existente e para cada registro não removido do arquivo de dados, insere codEstacao
+
 void funcionalidade7(char *nome_arq_dados, char *nome_arq_indice) {
  
     //abre arquivo de dados em modo leitura binária
@@ -58,7 +57,6 @@ void funcionalidade7(char *nome_arq_dados, char *nome_arq_indice) {
     //fecha arquivo de dados
     fclose(arv_dados);
  
-    //marca arquivo de índice como consistente e exibe conteúdo binário
-    //fechar_arvoreB atualiza status para '1' e chama BinarioNaTela internamente
+    //marca arquivo de índice como consistente e exibe conteúdo binário e fecha a arvore b
     fechar_arvoreB(arv_indice, nome_arq_indice);
 }

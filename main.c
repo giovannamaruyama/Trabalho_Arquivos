@@ -2,11 +2,13 @@
 //Giovanni Torres Bullo - 16869833
 
 #include "features.h"
+#include "indice.h"
 #include <stdio.h>
 
 int main() {
     int func;
     char arquivo_entrada[100];
+    char arquivo_arvoreB[100];
     char arquivo_saida[100];
 
     if (scanf("%d", &func) != 1) { //le o indicador de funcionalidade
@@ -48,14 +50,18 @@ int main() {
             update_table(arquivo_entrada, q);
             break;
 
-        case 7:
-
+        case 7: //funcionalidade 7- constroi indice
+            scanf("%s %s", arquivo_entrada, arquivo_arvoreB);
+            funcionalidade_7(arquivo_entrada, arquivo_arvoreB);
+            break;
+            break;
+        case 8: //funcionalidade 8 -busca com índice
+            scanf("%s %s", arquivo_entrada, arquivo_arvoreB);
+            funcionalidade_8(arquivo_entrada, arquivo_arvoreB);
             break;
         default:
             printf("Funcionalidade invalida.\n");
             break;
-        
-
     }
 
     return 0;

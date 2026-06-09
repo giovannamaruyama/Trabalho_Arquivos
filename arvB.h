@@ -1,8 +1,8 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
 
-#ifndef ARVORE_B_H
-#define ARVORE_B_H
+#ifndef ARV_B_H
+#define ARV_B_H
 #include "features.h"
 
 //constantes arvore b

@@ -2,7 +2,7 @@
 //Giovanni Torres Bullo - 16869833
 
 #include "features.h"
-#include "arvoreB.h"
+#include "arvB.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

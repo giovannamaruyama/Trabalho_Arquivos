@@ -1,16 +1,16 @@
 CC = gcc
 CFLAGS = -Wall -g
 
+SOURCES = $(wildcard *.c)
+OBJECTS = $(SOURCES:.c=.o)
+
 all: programaTrab
 
-programaTrab: main.o features.o
-	$(CC) $(CFLAGS) -o programaTrab main.o features.o
+programaTrab: $(OBJECTS)
+	$(CC) $(CFLAGS) -o programaTrab $(OBJECTS)
 
-main.o: main.c features.h
-	$(CC) $(CFLAGS) -c main.c
-
-features.o: features.c features.h
-	$(CC) $(CFLAGS) -c features.c
+%.o: %.c
+	$(CC) $(CFLAGS) -c $
 
 clean:
 	rm -f *.o programaTrab
