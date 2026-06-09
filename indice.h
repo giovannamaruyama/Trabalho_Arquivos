@@ -5,7 +5,7 @@
 #include "features.h"
 #include "arvB.h"
 
-void funcionalidade7(char *nome_arq_dados, char *nome_arq_indice);
+void funcionalidade_7(char *nome_arq_dados, char *nome_arq_indice);
 void funcionalidade_8(char *nome_bin, char *nome_indice);
 
 
