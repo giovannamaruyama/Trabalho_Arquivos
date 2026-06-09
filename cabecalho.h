@@ -1,5 +1,7 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833#ifndef CABECALHO_H
+
+#ifdef CABECALHO_H
 #define CABECALHO_H
 
 #include <stdio.h>
