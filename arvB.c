@@ -669,7 +669,7 @@ int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
     }
  
     //lê cabeçalho do arquivo de dados para obter metadados
-    CabecalhoArquivo cab_dados;
+    Cabecalho cab_dados;
     fseek(arv_dados, 0, SEEK_SET);
  
     //lê campo a campo conforme especificação do trabalho introdutório
