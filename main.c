@@ -2,10 +2,10 @@
 //Giovanni Torres Bullo - 16869833
 
 #include "features.h"
-#include "indice.h"
 #include "cabecalho.h"
 #include "registro.h"
 #include "auxcsv.h"
+#include "indice.h"
 #include <stdio.h>
 
 int main() {

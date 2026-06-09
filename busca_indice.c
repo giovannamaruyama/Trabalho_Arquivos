@@ -99,7 +99,8 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             //busca na árvore-b
             int rrn;
             if (buscar_arvoreB(arv_indice, cod_estacao, &rrn)) {
-                //se encontrou le o registro
+                //encontrou! lê registro
+                // CORREÇÃO: ler_registro_bin retorna int e recebe ponteiro
                 Registro reg;
                 if (ler_registro_bin(arv_dados, &reg) != -1) {
                     
@@ -172,6 +173,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
                 
                 //lê registro
+                // CORREÇÃO: ler_registro_bin retorna int e recebe ponteiro
                 Registro reg;
                 if (ler_registro_bin(arv_dados, &reg) == -1) {
                     continue;
