@@ -1,7 +1,7 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
 #ifndef INDICE_H
-#define INDICE_H_H
+#define INDICE_H
 #include "features.h"
 #include "arvB.h"
 
