@@ -754,29 +754,3 @@ int buscar_arvoreB(FILE *arv, int chave, int *pr) {
     //caso tenha percorrido ate a ultima folha e nn tiver encontrado
     return 0;
 }
- 
- //Imprime informações de um nó (debug)
-void imprime_no_arvoreB(NoArvoreB *no, int rrn) {
-    printf("=== Nó RRN %d ===\n", rrn);
-    printf("Removido: %c\n", no->removido);
-    printf("Tipo: %d\n", no->tipoNo);
-    printf("Chaves: %d\n", no->nroChaves);
-    for (int i = 0; i < no->nroChaves; i++) {
-        printf("  C[%d]=%d PR[%d]=%d\n", i, no->C[i], i, no->PR[i]);
-    }
-    printf("Filhos: ");
-    for (int i = 0; i <= no->nroChaves; i++) {
-        printf("P[%d]=%d ", i, no->P[i]);
-    }
-    printf("\n");
-}
- 
-//imprime cabeçalho da Árvore-B 
-void imprime_cabecalho_arvoreB(CabecalhoArvoreB *cab) {
-    printf("=== Cabeçalho Árvore-B ===\n");
-    printf("Status: %c\n", cab->status);
-    printf("Raiz: %d\n", cab->noRaiz);
-    printf("Topo (removidos): %d\n", cab->topo);
-    printf("Próximo RRN: %d\n", cab->proxRRN);
-    printf("Total de nós: %d\n", cab->nroNos);
-}
