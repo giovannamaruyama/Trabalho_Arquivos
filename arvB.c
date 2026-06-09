@@ -336,14 +336,14 @@ int insere_chave_promovida(FILE *arv, int rrn_pai, int rrn_avo,int chave, int pr
         
         //atualiza cabeçalho
         cab.noRaiz = rrn_raiz;
-        cab.nroNos += 2;
+        cab.nroNos +=1;
         escreve_cabecalho_arvoreB(arv, &cab);
         
         return 1;
     }
     
     //se avó existe e não for raiz, recursão
-    cab.nroNos += 2;
+    cab.nroNos += 1;
     escreve_cabecalho_arvoreB(arv, &cab);
     
     //insere chave promovida no avó
@@ -458,6 +458,10 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
     if (arv == NULL || pr < 0) {
         return 0;
     }
+
+    NoArvoreB no;
+    inicializa_no_arvoreB(&no, -1);
+
     //lê cabeçalho
     CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
     
@@ -524,7 +528,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
     }
     
     //insere na folha
-    NoArvoreB folha = le_no_arvoreB(arv, rrn_atual);
+    NoArvoreB folha = no;
     
     //verifica se folha tem espaço
     if (folha.nroChaves < MAX_CHAVES) {
@@ -557,8 +561,11 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         no_temp.PR[pos] = pr;
         
         //faz split com avó 
-        split_no_arvoreB(arv, rrn_pai, rrn_avo, &no_temp);
-        
+        if (rrn_pai == -1) {
+            split_no_arvoreB(arv, rrn_atual, rrn_avo, &no_temp);
+        } else {
+            split_no_arvoreB(arv, rrn_pai, rrn_avo, &no_temp);
+        }
         //atualiza cabeçalho
         cab.status = '1';
         escreve_cabecalho_arvoreB(arv, &cab);
@@ -622,10 +629,7 @@ void remove_logicamente_no_arvoreB(FILE *arv, int rrn, CabecalhoArvoreB *cab) {
     escreve_cabecalho_arvoreB(arv, cab);
 }
 
-//Retorna o RRN de um nó logicamente removido para reutilização (desempilha da pilha)
-//Se não houver nós removidos (topo == -1), retorna -1
-//Atualiza o cabeçalho (campo topo) após o desempilhamento
-//O lixo que permanece no nó e que não é sobrescrito deve ser
+//retorna o RRN de um nó logicamente removido para reutilização
 //identificado pelo caractere 'S' (conforme especificação)
 int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab) {
     //verifica parâmetros
@@ -657,52 +661,40 @@ int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab) {
 
 //Constrói o índice Árvore-B percorrendo o arquivo de dados registro a registrs, apenas egistros não logicamente removidos têm suas chaves inseridas no índice
 int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
-    //verifica parâmetros
     if (arv_dados == NULL || arv_indice == NULL) {
         return 0;
     }
  
-    //lê cabeçalho do arquivo de dados para obter metadados
+    //le o cabeçalho do arquivo de dados para capturar a proxRRN)
     Cabecalho cab_dados;
     fseek(arv_dados, 0, SEEK_SET);
-   
-    //le campo a campo conforme struct Cabecalho
-    fread(&cab_dados.status,sizeof(char), 1, arv_dados);
+    fread(&cab_dados.status, sizeof(char), 1, arv_dados);
     fread(&cab_dados.topo,sizeof(int),  1, arv_dados);
-    fread(&cab_dados.proxRRN,sizeof(int),  1, arv_dados);
-    fread(&cab_dados.nroEstacoes, sizeof(int),  1, arv_dados);
+    fread(&cab_dados.proxRRN, sizeof(int),  1, arv_dados);
+    fread(&cab_dados.nroEstacoes,sizeof(int),  1, arv_dados);
     fread(&cab_dados.nroParesEstacao, sizeof(int),  1, arv_dados);
-   
-    //percorre todos os registros do arquivo de dados pelo RRN
-    for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
  
-        //calcula posição do registro no arquivo de dados
+    Registro reg;
+ 
+    // Força o loop a rodar exatamente a quantidade certa de registros físicos existentes
+    for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
+        
+        // Garante o alinhamento absoluto: força o ponteiro a ir para o início do registro atual antes de ler
         long byte_offset = TAM_CABECALHO + ((long)rrn * TAM_REGISTRO);
         fseek(arv_dados, byte_offset, SEEK_SET);
  
-        //lê campo removido (1 byte)
-        char removido;
-        fread(&removido, sizeof(char), 1, arv_dados);
- 
-        //ignora registros logicamente removidos
-        if (removido == '1') {
-            continue;
-        }
- 
-        //lê campo codEstacao (chave de busca)
-        int codEstacao;
-        fread(&codEstacao, sizeof(int), 1, arv_dados);
- 
-        //ignora registros com codEstacao nulo (-1)
-        if (codEstacao == -1) {
-            continue;
-        }
- 
-        //insere par (chave, rrn) no índice árvore-B
-        int resultado = inserir_arvoreB(arv_indice, codEstacao, rrn);
-        if (resultado == 0) {
-            //falha na inserção
-            return 0;
+        //Faz a leitura limpa do bloco de 80 bytes
+        if (ler_registro_bin(arv_dados, &reg)) {
+            
+            //ignora registros removidos 1 e chaves nulas -1
+            if (reg.removido == '0' && reg.codEstacao != -1) {
+                int resultado = inserir_arvoreB(arv_indice, reg.codEstacao, rrn);
+                if (resultado == 0) {
+                    libera_registro(&reg);
+                    return 0; // Se houver falha crítica para
+                }
+            }
+            libera_registro(&reg);
         }
     }
  
