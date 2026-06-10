@@ -100,7 +100,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             int rrn;
             if (buscar_arvoreB(arv_indice, cod_estacao, &rrn)) {
                 //encontrou! lê registro
-                // CORREÇÃO: ler_registro_bin retorna int e recebe ponteiro
+                //ler_registro_bin retorna int e recebe ponteiro
                 Registro reg;
                 if (ler_registro_bin(arv_dados, &reg) != -1) {
                     
