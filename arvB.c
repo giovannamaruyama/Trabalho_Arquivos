@@ -350,8 +350,7 @@ int insere_chave_promovida(FILE *arv, int rrn_pai, int rrn_avo,int chave, int pr
     return insere_chave_promovida(arv, rrn_avo, -1, chave_prom, pr_prom);
 }
 
-int split_no_arvoreB(FILE *arv, int rrn_pai, int rrn_avo, 
-                     NoArvoreB *no_cheio) {
+int split_no_arvoreB(FILE *arv, int rrn_atual, int rrn_pai, int rrn_avo, NoArvoreB *no_cheio) {
     
     //verifica parâmetros
     if (arv == NULL || no_cheio == NULL) {
@@ -414,8 +413,8 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int rrn_avo,
     no_cheio->C[2] = -1;
     no_cheio->PR[2] = -1;
     
-    //escreve nó esquerdo - captura o rrn
-    int rrn_esq = escreve_no_arvoreB(arv, -1, no_cheio);
+    //escreve nó esquerdo captura o rrn
+    int rrn_esq = escreve_no_arvoreB(arv, rrn_atual, no_cheio);
     
     //escreve nó direito
     escreve_no_arvoreB(arv, rrn_novo, &no_direito);
@@ -439,8 +438,7 @@ int split_no_arvoreB(FILE *arv, int rrn_pai, int rrn_avo,
         cab.noRaiz = rrn_raiz;
         cab.nroNos += 2;  //adicionou 2 nós (esq e dir)
     } else {
-        //pai existe - usa função auxiliar recursiva
-        //não repete o split, usa a função que trata recursão
+        //pai existe - usa função auxiliar recursiva não repete o split
         insere_chave_promovida(arv, rrn_pai, rrn_avo, 
                               chave_promove, pr_promove);
         cab.nroNos += 2;
@@ -561,11 +559,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         no_temp.PR[pos] = pr;
         
         //faz split com avó 
-        if (rrn_pai == -1) {
-            split_no_arvoreB(arv, rrn_atual, rrn_avo, &no_temp);
-        } else {
-            split_no_arvoreB(arv, rrn_pai, rrn_avo, &no_temp);
-        }
+        split_no_arvoreB(arv, rrn_atual, rrn_pai, rrn_avo, &no_temp);
         //atualiza cabeçalho
         cab.status = '1';
         escreve_cabecalho_arvoreB(arv, &cab);
@@ -629,8 +623,7 @@ void remove_logicamente_no_arvoreB(FILE *arv, int rrn, CabecalhoArvoreB *cab) {
     escreve_cabecalho_arvoreB(arv, cab);
 }
 
-//retorna o RRN de um nó logicamente removido para reutilização
-//identificado pelo caractere 'S' (conforme especificação)
+//retorna o RRN de um nó logicamente removido para reutilização, identifica com S
 int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab) {
     //verifica parâmetros
     if (arv == NULL || cab == NULL) {
@@ -720,6 +713,11 @@ int buscar_arvoreB(FILE *arv, int chave, int *pr) {
     while (rrn_atual != -1) {
         //le o no atual da arvore
         NoArvoreB no = le_no_arvoreB(arv, rrn_atual);
+
+        for (int i = 0; i < no.nroChaves; i++) {
+            printf("%d ", no.C[i]);
+        }
+        printf("]\n");
         
         //Verifica se o no foi lido com sucesso
         if (no.nroChaves < 0 || no.nroChaves > MAX_CHAVES) {

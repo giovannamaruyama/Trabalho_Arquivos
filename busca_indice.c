@@ -101,7 +101,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             if (buscar_arvoreB(arv_indice, cod_estacao, &rrn)) {
                 //encontrou! lê registro
                 
-                // 🔧 CORREÇÃO CRÍTICA: posicionar no arquivo ANTES de ler!
+                //posiciona no arquivo anes de ler
                 long byte_offset = TAM_CABECALHO + ((long)rrn * TAM_REGISTRO);
                 fseek(arv_dados, byte_offset, SEEK_SET);
                 

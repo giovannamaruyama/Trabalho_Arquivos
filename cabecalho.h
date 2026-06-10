@@ -10,7 +10,6 @@
 #include "features.h"
 #define TAM_CABECALHO 17 
 
-
 //Funcoes de inicializacao e escrita
 void inicializa_cabecalho(Cabecalho *cab);
 void escreve_cabecalho(FILE *bin, Cabecalho *cab);
