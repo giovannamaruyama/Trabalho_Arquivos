@@ -99,8 +99,12 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             //busca na árvore-b
             int rrn;
             if (buscar_arvoreB(arv_indice, cod_estacao, &rrn)) {
-                //encontrou! lê registro
-                //ler_registro_bin retorna int e recebe ponteiro
+                //encontrou, lê registro
+                
+                //posiciona no arquivo antes de ler
+                long byte_offset = TAM_CABECALHO + ((long)rrn * TAM_REGISTRO);
+                fseek(arv_dados, byte_offset, SEEK_SET);
+                
                 Registro reg;
                 if (ler_registro_bin(arv_dados, &reg) != -1) {
                     
@@ -163,17 +167,16 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
             //busca por qualquer outro campo, começa lendo o cabeçalho
             Cabecalho cab_dados;
             fseek(arv_dados, 0, SEEK_SET);
-            fread(&cab_dados.status,          sizeof(char), 1, arv_dados);
-            fread(&cab_dados.topo,            sizeof(int),  1, arv_dados);
-            fread(&cab_dados.proxRRN,         sizeof(int),  1, arv_dados);
-            fread(&cab_dados.nroEstacoes,     sizeof(int),  1, arv_dados);
+            fread(&cab_dados.status, sizeof(char), 1, arv_dados);
+            fread(&cab_dados.topo,sizeof(int),  1, arv_dados);
+            fread(&cab_dados.proxRRN, sizeof(int),  1, arv_dados);
+            fread(&cab_dados.nroEstacoes,sizeof(int),  1, arv_dados);
             fread(&cab_dados.nroParesEstacao, sizeof(int),  1, arv_dados);
             
             //percorre todos os registros
             for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
                 
                 //lê registro
-                // CORREÇÃO: ler_registro_bin retorna int e recebe ponteiro
                 Registro reg;
                 if (ler_registro_bin(arv_dados, &reg) == -1) {
                     continue;
