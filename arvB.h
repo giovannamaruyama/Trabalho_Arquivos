@@ -69,7 +69,7 @@ int procura_posicao(NoArvoreB *no, int chave);
 //Insercao
 int inserir_arvoreB(FILE *arv, int chave, int pr);
 
-int split_no_arvoreB(FILE *arv, int rrn_atual, int rrn_pai, int rrn_avo, NoArvoreB *no_cheio);
+int split_no_arvoreB(FILE *arv, int *caminho, int nivel, NoArvoreB *no_original, int chave_nova, int pr_novo, int rrn_filho_direito);
 
 void insere_em_no(NoArvoreB *no, int chave, int pr);
 
