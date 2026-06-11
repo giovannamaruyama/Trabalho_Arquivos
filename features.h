@@ -79,26 +79,6 @@ typedef struct {
     int num_atualizacoes;
 } ConjuntoAtualizacoes;
  
-//stuct da arvore-b
- 
-typedef struct {
-    char status;
-    int noRaiz;
-    int topo;
-    int proxRRN;
-    int nroNos;
-} CabecalhoArvoreB;
- 
-typedef struct {
-    char removido;
-    int proximo;
-    int tipoNo;
-    int nroChaves;
-    int C[3];
-    int PR[3];
-    int P[4];
-} NoArvoreB;
-
 //Funcionalidades do trabalho 1:
 void create_table(char *nome_csv, char *nome_bin) ;
 void select_from(char *nome_bin);
@@ -144,4 +124,4 @@ void ScanQuoteString(char *str);
 int ler_linha_csv(FILE *csv, Registro *reg);
 void recalcula_contadores(FILE *bin, Cabecalho *cab);
  
-#endif /* FEATURES_H */
+#endif 

@@ -6,13 +6,31 @@
 #include "features.h"
 
 //constantes arvore b
-#define TAM_CABECALHO_ARVORE_B 17    //tamanho cabeçalho: 17 bytes
-#define TAM_NO_ARVORE_B 53           //Tamanho nó: 53 bytes 
-#define ORDEM_ARVORE_B 4             //Ordem: n = 4 
+#define TAM_CABECALHO_ARVORE_B 17  //tamanho cabeçalho: 17 bytes
+#define TAM_NO_ARVORE_B 53 //Tamanho nó: 53 bytes 
+#define ORDEM_ARVORE_B 4 //Ordem: n = 4 
 #define MAX_CHAVES 3//Maximo chaves: 3 
 #define MAX_FILHOS 4    //Maximo filhos: 4
 #define MIN_CHAVES 1  //Min chaves folha
 
+//struct da arvore b
+typedef struct {
+    char status;
+    int noRaiz;
+    int topo;
+    int proxRRN;
+    int nroNos;
+} CabecalhoArvoreB;
+ 
+typedef struct {
+    char removido;
+    int proximo;
+    int tipoNo;
+    int nroChaves;
+    int C[3]; //arrumar pra 3
+    int PR[3]; //arrumar pra 3
+    int P[4]; //arrumar pra 4
+} NoArvoreB;
 
 //Cria um novo arquivo de índice Árvore-B vazio
 int criar_arvoreB(char *nome_arquivo);
