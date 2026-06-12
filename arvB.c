@@ -363,7 +363,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
     //Marca inconsistente
     atualiza_status_arvoreB(arv, '0');
 
-    // CASO 1: ARVORE VAZIA
+    //caso 1: ARVORE VAZIA
     if (cab.noRaiz == -1) {
         NoArvoreB raiz;
         //raiz n tem filhos entao eh folha
@@ -386,7 +386,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         return 1;
     }
 
-    // CASO 2: desce guardando caminho
+    //caso 2: desce guardando caminho
     int caminho[200]; //historico rrn
     int nivel = -1;   //profundidade
     int rrn_atual = cab.noRaiz;
@@ -415,7 +415,7 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
         rrn_atual = no.P[pos];
     }
 
-    // CASO 3: insere na folha ou split
+    //caso 3: insere na folha ou split
     NoArvoreB folha = no;
 
     //Verifica espaco na folha
