@@ -62,6 +62,11 @@ int main() {
             scanf("%s %s", arquivo_entrada, arquivo_arvoreB);
             funcionalidade_8(arquivo_entrada, arquivo_arvoreB);
             break;
+        case 9: // funcionalidade 9 - inserção em dados e índice
+            int num_insercoes;
+            scanf("%s %s %d", arquivo_entrada, arquivo_arvoreB, &num_insercoes);
+            funcionalidade_9(arquivo_entrada, arquivo_arvoreB, num_insercoes);
+            break;
         default:
             printf("Funcionalidade invalida.\n");
             break;
