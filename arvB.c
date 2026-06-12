@@ -402,9 +402,9 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
             return 0; // no corrompido
         }
         //verifica chave repetida
-        int dummy;
-        if (busca_em_no(&no, chave, &dummy)) {
-            return 0; // chave duplicada nao entra
+        int pr_descarte;
+        if (busca_em_no(&no, chave, &pr_descarte)) {
+            return 1; // chave duplicada nao entra
         }
         //Ve se eh folha
         if (no.tipoNo == -1) {
@@ -532,7 +532,7 @@ int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
                 int resultado = inserir_arvoreB(arv_indice, reg.codEstacao, rrn);
                 if (resultado == 0) {
                     libera_registro(&reg);
-                    return 0; //falha critica para
+                    return 0; //falha
                 }
             }
             libera_registro(&reg);
