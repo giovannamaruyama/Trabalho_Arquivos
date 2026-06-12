@@ -354,91 +354,214 @@ int split_no_arvoreB(FILE *arv, int *caminho, int nivel, NoArvoreB *no_original,
     }
     return rrn_novo;
 }
-
-int inserir_arvoreB(FILE *arv, int chave, int pr) {
-    if (arv == NULL || pr < 0) {
-        return 0;
+//Funcao 1 insercao recursiva
+int inserir_recursivo(FILE *arv, int rrn_atual, int chave, int pr, int *promo_filho_dir, int *promo_chave, int *promo_pr) {
+    //Condicao de parada chegou no fundo falso
+    //manda chave pra cima pra inserir na folha
+    if (rrn_atual == -1) {
+        *promo_chave = chave;
+        *promo_pr = pr;
+        *promo_filho_dir = -1;
+        return PROMOCAO;
     }
+
+    //Le no atual
+    NoArvoreB no = le_no_arvoreB(arv, rrn_atual);
+
+    //Procura chave e ignora duplicata
+    int dummy;
+    if (busca_em_no(&no, chave, &dummy)) {
+        return ERRO; 
+    }
+
+    //Acha ponteiro pra descer
+    int pos = procura_posicao(&no, chave);
+
+    //Chamada recursiva descendo
+    int p_b_rrn, p_b_chave, p_b_pr;
+    int retorno = inserir_recursivo(arv, no.P[pos], chave, pr, &p_b_rrn, &p_b_chave, &p_b_pr);
+
+    if (retorno == ERRO || retorno == SEM_PROMOCAO) {
+        return retorno;
+    }
+
+    //Trata promocao do filho
+    if (no.nroChaves < MAX_CHAVES) {
+        //Tem espaco insere chave e finaliza
+        int pos_ins = procura_posicao(&no, p_b_chave);
+
+        for (int i = no.nroChaves; i > pos_ins; i--) {
+            no.C[i] = no.C[i-1];
+            no.PR[i] = no.PR[i-1];
+        }
+        for (int i = no.nroChaves + 1; i > pos_ins + 1; i--) {
+            no.P[i] = no.P[i-1];
+        }
+
+        no.C[pos_ins] = p_b_chave;
+        no.PR[pos_ins] = p_b_pr;
+        no.P[pos_ins+1] = p_b_rrn;
+        no.nroChaves++;
+
+        escreve_no_arvoreB(arv, rrn_atual, &no);
+        return SEM_PROMOCAO;
+    } else {
+        //No cheio faz split
+        int c_temp[4], pr_temp[4], p_temp[5];
+        for (int i = 0; i < 3; i++) {
+            c_temp[i] = no.C[i];
+            pr_temp[i] = no.PR[i];
+            p_temp[i] = no.P[i];
+        }
+        p_temp[3] = no.P[3];
+        p_temp[4] = -1;
+
+        int p_ins = 0;
+        while (p_ins < 3 && p_b_chave > c_temp[p_ins]) p_ins++;
+
+        for (int i = 3; i > p_ins; i--) {
+            c_temp[i] = c_temp[i-1];
+            pr_temp[i] = pr_temp[i-1];
+        }
+        for (int i = 4; i > p_ins + 1; i--) {
+            p_temp[i] = p_temp[i-1];
+        }
+
+        c_temp[p_ins] = p_b_chave;
+        pr_temp[p_ins] = p_b_pr;
+        p_temp[p_ins+1] = p_b_rrn;
+
+        //Chave do meio sobe pro pai
+        *promo_chave = c_temp[2];
+        *promo_pr = pr_temp[2];
+
+        //No esquerdo fica com as 2 primeiras chaves
+        no.nroChaves = 2;
+        no.C[0] = c_temp[0]; no.PR[0] = pr_temp[0]; no.P[0] = p_temp[0];
+        no.C[1] = c_temp[1]; no.PR[1] = pr_temp[1]; no.P[1] = p_temp[1];
+        no.P[2] = p_temp[2];
+        
+        //Limpa lixo
+        no.C[2] = -1; no.PR[2] = -1; no.P[3] = -1;
+
+        //Ajusta tipo se n era folha vira intermediario
+        int novo_tipo = (no.tipoNo == -1) ? -1 : 1;
+        no.tipoNo = novo_tipo; 
+
+        //Novo no dir fica com ultima chave
+        NoArvoreB novo_no;
+        inicializa_no_arvoreB(&novo_no, novo_tipo);
+        novo_no.nroChaves = 1;
+        novo_no.C[0] = c_temp[3]; novo_no.PR[0] = pr_temp[3];
+        novo_no.P[0] = p_temp[3]; novo_no.P[1] = p_temp[4];
+
+        //Aloca rrn buscando na pilha primeiro
+        CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
+        int rrn_novo;
+        if (cab.topo != -1) {
+            rrn_novo = cab.topo;
+            NoArvoreB removido = le_no_arvoreB(arv, rrn_novo);
+            cab.topo = removido.proximo;
+        } else {
+            rrn_novo = cab.proxRRN;
+            cab.proxRRN++;
+        }
+        cab.nroNos++;
+        escreve_cabecalho_arvoreB(arv, &cab);
+
+        *promo_filho_dir = rrn_novo;
+
+        //Grava metades no disco
+        escreve_no_arvoreB(arv, rrn_atual, &no);
+        escreve_no_arvoreB(arv, rrn_novo, &novo_no);
+
+        return PROMOCAO;
+    }
+}
+
+//Funcao 2 gerencia raiz e cabecalhos
+int inserir_arvoreB(FILE *arv, int chave, int pr) {
+    if (arv == NULL || pr < 0) return 0;
+
     CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
-    //Marca inconsistente
     atualiza_status_arvoreB(arv, '0');
 
-    //caso 1: ARVORE VAZIA
+    //Primeira insercao cria arvore
     if (cab.noRaiz == -1) {
         NoArvoreB raiz;
-        //raiz n tem filhos entao eh folha
-        // O enunciado diz: "Quando nó-folha = nó-raiz, tipoNo = -1"
-        inicializa_no_arvoreB(&raiz, -1);  
-        
+        inicializa_no_arvoreB(&raiz, -1); //raiz que eh folha eh -1
         raiz.C[0] = chave;
         raiz.PR[0] = pr;
         raiz.nroChaves = 1;
 
-        //aloca rrn
-        int rrn_raiz = escreve_no_arvoreB(arv, -1, &raiz);
+        int rrn_raiz;
+        if (cab.topo != -1) {
+            rrn_raiz = cab.topo;
+            NoArvoreB rem = le_no_arvoreB(arv, rrn_raiz);
+            cab.topo = rem.proximo;
+        } else {
+            rrn_raiz = cab.proxRRN;
+            cab.proxRRN++;
+        }
 
-        //Att cabecalho
-        cab = le_cabecalho_arvoreB(arv); 
+        escreve_no_arvoreB(arv, rrn_raiz, &raiz);
+
         cab.noRaiz = rrn_raiz;
-        cab.nroNos = 1; 
+        cab.nroNos++;
         cab.status = '1';
         escreve_cabecalho_arvoreB(arv, &cab);
         return 1;
     }
 
-    //caso 2: desce guardando caminho
-    int caminho[200]; //historico rrn
-    int nivel = -1;   //profundidade
-    int rrn_atual = cab.noRaiz;
-    NoArvoreB no;
+    //Chama recursao
+    int promo_filho_dir, promo_chave, promo_pr;
+    int retorno = inserir_recursivo(arv, cab.noRaiz, chave, pr, &promo_filho_dir, &promo_chave, &promo_pr);
 
-    while (rrn_atual != -1) {
-        //Empilha rrn no historico
-        caminho[++nivel] = rrn_atual; 
-        no = le_no_arvoreB(arv, rrn_atual);
-
-        //verifica validade
-        if (no.nroChaves < 0 || no.nroChaves > MAX_CHAVES) {
-            return 0; // no corrompido
-        }
-        //verifica chave repetida
-        int pr_descarte;
-        if (busca_em_no(&no, chave, &pr_descarte)) {
-            return 1; // chave duplicada nao entra
-        }
-        //Ve se eh folha
-        if (no.tipoNo == -1) {
-            break; // chegamos na folha, sai do loop
-        }
-        //n eh folha desce
-        int pos = procura_posicao(&no, chave);
-        rrn_atual = no.P[pos];
-    }
-
-    //caso 3: insere na folha ou split
-    NoArvoreB folha = no;
-
-    //Verifica espaco na folha
-    if (folha.nroChaves < MAX_CHAVES) {
-        //tem espaco insere
-        insere_em_no(&folha, chave, pr);
-        //escreve folha att
-        escreve_no_arvoreB(arv, caminho[nivel], &folha);
-
+    if (retorno == ERRO) {
         cab = le_cabecalho_arvoreB(arv);
         cab.status = '1';
         escreve_cabecalho_arvoreB(arv, &cab);
-        return 1;
-    } else {
-        //Folha cheia faz split
-        split_no_arvoreB(arv, caminho, nivel, &folha, chave, pr, -1);
-        //finaliza consistente
+        return 1; //ignora duplicatas
+    }
+
+    if (retorno == PROMOCAO) {
+        //Raiz quebrou cria nova pra cobrir as metades
+        NoArvoreB nova_raiz;
+        inicializa_no_arvoreB(&nova_raiz, 0); //tipo 0 eh da raiz
+        nova_raiz.C[0] = promo_chave;
+        nova_raiz.PR[0] = promo_pr;
+        nova_raiz.P[0] = cab.noRaiz;
+        nova_raiz.P[1] = promo_filho_dir;
+        nova_raiz.nroChaves = 1;
+
         cab = le_cabecalho_arvoreB(arv);
+        int rrn_nova_raiz;
+        if (cab.topo != -1) {
+            rrn_nova_raiz = cab.topo;
+            NoArvoreB rem = le_no_arvoreB(arv, rrn_nova_raiz);
+            cab.topo = rem.proximo;
+        } else {
+            rrn_nova_raiz = cab.proxRRN;
+            cab.proxRRN++;
+        }
+
+        escreve_no_arvoreB(arv, rrn_nova_raiz, &nova_raiz);
+
+        cab.noRaiz = rrn_nova_raiz;
+        cab.nroNos++;
         cab.status = '1';
         escreve_cabecalho_arvoreB(arv, &cab);
         return 1;
     }
+
+    //Retorno sem promocao
+    cab = le_cabecalho_arvoreB(arv);
+    cab.status = '1';
+    escreve_cabecalho_arvoreB(arv, &cab);
+    return 1;
 }
+
+
 
 int busca_em_no(NoArvoreB *no, int chave, int *pr) {
     //valida no
@@ -504,40 +627,43 @@ int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab) {
     //retorna rrn p/ reuso
     return rrn_reutilizado;
 }
-
-//constroi arvore-b iterando arquivo de dados
 int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
     if (arv_dados == NULL || arv_indice == NULL) {
         return 0;
     }
-    //Le cabecalho do arq dados
+    
+    // Lê o cabeçalho apenas para avançar o ponteiro (ignoramos o proxRRN dele)
     Cabecalho cab_dados;
     fseek(arv_dados, 0, SEEK_SET);
     fread(&cab_dados.status, sizeof(char), 1, arv_dados);
-    fread(&cab_dados.topo,sizeof(int),  1, arv_dados);
+    fread(&cab_dados.topo, sizeof(int),  1, arv_dados);
     fread(&cab_dados.proxRRN, sizeof(int),  1, arv_dados);
-    fread(&cab_dados.nroEstacoes,sizeof(int),  1, arv_dados);
+    fread(&cab_dados.nroEstacoes, sizeof(int),  1, arv_dados);
     fread(&cab_dados.nroParesEstacao, sizeof(int),  1, arv_dados);
+    
     Registro reg;
-
-    //forca loop rodar qtd certa de registros
-    for (int rrn = 0; rrn < cab_dados.proxRRN; rrn++) {
-        //alinhamento: poe ponteiro no inicio do registro
-        long byte_offset = TAM_CABECALHO + ((long)rrn * TAM_REGISTRO);
-        fseek(arv_dados, byte_offset, SEEK_SET);
-        //Leitura de 80 bytes
-        if (ler_registro_bin(arv_dados, &reg)) {
-            //ignora removidos e chaves -1
-            if (reg.removido == '0' && reg.codEstacao != -1) {
-                int resultado = inserir_arvoreB(arv_indice, reg.codEstacao, rrn);
-                if (resultado == 0) {
-                    libera_registro(&reg);
-                    return 0; //falha
-                }
-            }
-            libera_registro(&reg);
+    int rrn = 0;
+    
+    // Garante que a leitura comece exatamente após o cabeçalho (Byte 17)
+    fseek(arv_dados, 17, SEEK_SET);
+    
+    //Lê fisicamente até o final do arquivo
+    while (ler_registro_bin(arv_dados, &reg)) {
+        
+        // Só insere se não estiver logicamente removido e tiver uma chave válida
+        if (reg.removido == '0' && reg.codEstacao != -1) {
+            
+            //insere
+            inserir_arvoreB(arv_indice, reg.codEstacao, rrn);
+            
         }
+        
+        libera_registro(&reg);
+        
+        // O RRN sempre avança
+        rrn++; 
     }
+    
     return 1;
 }
 

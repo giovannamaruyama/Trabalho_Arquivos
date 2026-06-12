@@ -1,6 +1,5 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
-
 #ifndef ARV_B_H
 #define ARV_B_H
 #include "features.h"
@@ -12,6 +11,9 @@
 #define MAX_CHAVES 3//Maximo chaves: 3 
 #define MAX_FILHOS 4    //Maximo filhos: 4
 #define MIN_CHAVES 1  //Min chaves folha
+#define PROMOCAO 1 //pra insercao
+#define SEM_PROMOCAO 0 //pra insercao
+#define ERRO -1 //pra insercao
 
 //struct da arvore b
 typedef struct {
