@@ -68,14 +68,15 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
                 fseek(arv_dados, byte_offset, SEEK_SET);
                 
                 Registro reg;
-                // Atenção: ler_registro_bin retorna 1 em sucesso!
+                //ler_registro_bin retorna 1 
                 if (ler_registro_bin(arv_dados, &reg)) {
                     // Além de encontrar na árvore, o registro precisa satisfazer TODOS os outros critérios e não estar removido
                     if (reg.removido == '0' && satisfaz_todos_criterios(&reg, &criterios)) {
                         imprime_registro(&reg);
+                        printf("/n");
                         encontrou = 1;
                     }
-                    // REUTILIZAMOS A SUA FUNÇÃO! Libera a memória com segurança.
+                    //Libera a memória com segurança.
                     libera_registro(&reg); 
                 }
             }
