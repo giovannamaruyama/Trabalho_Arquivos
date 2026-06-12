@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
- 
+
 //cria novo arq de indice vazio
 int criar_arvoreB(char *nome_arquivo) {
     //Abre arquivo modo escrita bin
