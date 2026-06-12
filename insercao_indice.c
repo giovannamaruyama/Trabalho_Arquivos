@@ -5,79 +5,87 @@
 #include <string.h>
 
 void funcionalidade_9(char *nome_bin, char *nome_indice, int num_insercoes) {
-    //Abre arq dados rb+
-    FILE *arv_dados = fopen(nome_bin, "rb+");
-    if (arv_dados == NULL) {
+    // Abre arq dados rb+
+    FILE *bin = fopen(nome_bin, "rb+");
+    if (bin == NULL) {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-    //Le cabecalho seguro
-    Cabecalho cab_dados = le_cabecalho(arv_dados);
-    if (cab_dados.status == '0') {
+    Cabecalho cab;
+    if (fread(&cab.status, sizeof(char), 1, bin) != 1 || cab.status == '0') {
         printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
+        fclose(bin);
         return;
     }
-    //Abre indice r+b
+    fread(&cab.topo, sizeof(int), 1, bin);
+    fread(&cab.proxRRN, sizeof(int), 1, bin);
+    fread(&cab.nroEstacoes, sizeof(int), 1, bin);
+    fread(&cab.nroParesEstacao, sizeof(int), 1, bin);
+    // Abre indice r+b
     FILE *arv_indice = abrir_arvoreB(nome_indice, "r+b");
     if (arv_indice == NULL) {
         printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
+        fclose(bin);
         return;
     }
     CabecalhoArvoreB cab_indice = le_cabecalho_arvoreB(arv_indice);
     if (cab_indice.status == '0') {
         printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
+        fclose(bin);
         fclose(arv_indice);
         return;
     }
-    //Marca inconsistente
-    cab_dados.status = '0';
-    escreve_cabecalho(arv_dados, &cab_dados);
+    // Marca arqs inconsistentes
+    cab.status = '0';
+    fseek(bin, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, bin);
+    fflush(bin);
     atualiza_status_arvoreB(arv_indice, '0');
-    //Executa n insercoes
+    // Executa n insercoes
     for (int i = 0; i < num_insercoes; i++) {
         Registro reg;
-        //Inicializa reg c/ padrao
-        inicializa_registro(&reg);
+        // Le registro da entrada
         le_novo_registro(&reg); 
         long byte_offset_destino;
         int rrn_usado;
-        //Verifica removidos na pilha
-        if (cab_dados.topo != -1) {
-            //Reaproveita rrn topo
-            rrn_usado = cab_dados.topo;
+        // Verifica removidos na pilha
+        if (cab.topo != -1) {
+            rrn_usado = cab.topo;
             byte_offset_destino = (long)TAM_CABECALHO + (long)rrn_usado * TAM_REGISTRO;
-            //Le prox e att topo
-            fseek(arv_dados, byte_offset_destino + 1, SEEK_SET);
+            // Le prox e att topo 
+            fseek(bin, byte_offset_destino + 1 , SEEK_SET);
             int proximo_removido;
-            fread(&proximo_removido, sizeof(int), 1, arv_dados);
-            cab_dados.topo = proximo_removido;
-            //Escreve por cima
-            fseek(arv_dados, byte_offset_destino, SEEK_SET);
-            escreve_registro_bin(arv_dados, &reg);
+            fread(&proximo_removido, sizeof(int), 1, bin);
+            // Avanca topo da pilha 
+            cab.topo = proximo_removido;
+            // Escreve por cima 
+            fseek(bin, byte_offset_destino, SEEK_SET);
+            escreve_registro_bin(bin, &reg);
         } else {
-            //Pilha vazia insere no fim
-            rrn_usado = cab_dados.proxRRN;
-            byte_offset_destino = (long)TAM_CABECALHO + (long)rrn_usado * TAM_REGISTRO;
-            fseek(arv_dados, byte_offset_destino, SEEK_SET);
-            escreve_registro_bin(arv_dados, &reg);
-            cab_dados.proxRRN++;
+            // Pilha vazia insere no fim
+            rrn_usado = cab.proxRRN;
+            byte_offset_destino = (long)TAM_CABECALHO + (long)cab.proxRRN * TAM_REGISTRO;
+            fseek(bin, byte_offset_destino, SEEK_SET);
+            escreve_registro_bin(bin, &reg);
+            cab.proxRRN++;
         }
-        //Incrementa estacoes ativas
-        cab_dados.nroEstacoes++;
-        //Att arvore-b
+        cab.nroEstacoes++;
+        // Att arvore-b
         inserir_arvoreB(arv_indice, reg.codEstacao, rrn_usado);
-        //Libera memoria
         libera_registro(&reg);
     }
-    //Finaliza status 1 arq dados
-    cab_dados.status = '1';
-    escreve_cabecalho(arv_dados, &cab_dados);
-    fclose(arv_dados);
-    //Exibe soma bytes
+    // Finaliza status 1 arq dados
+    cab.status = '1';
+    fseek(bin, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, bin);
+    fwrite(&cab.topo, sizeof(int), 1, bin);
+    fwrite(&cab.proxRRN, sizeof(int), 1, bin);
+    fwrite(&cab.nroEstacoes, sizeof(int), 1, bin);
+    fwrite(&cab.nroParesEstacao, sizeof(int), 1, bin);
+    fflush(bin);
+    fclose(bin);
+    // Exibe saida na tela
     BinarioNaTela(nome_bin);
-    //Fecha arv e chama binario
-    fechar_arvoreB(arv_indice, nome_indice);
+    // Fecha arv e chama binario
+    fechar_arvoreB(arv_indice, nome_indice); 
 }
