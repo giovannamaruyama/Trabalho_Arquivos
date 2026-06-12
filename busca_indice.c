@@ -14,6 +14,14 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
+    //verifica o status do arquivo
+    Cabecalho cab_dados;
+    fseek(arv_dados, 0, SEEK_SET);
+    if (fread(&cab_dados.status, sizeof(char), 1, arv_dados) != 1 || cab_dados.status == '0') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(arv_dados);
+        return;
+    }
     
     // abre arquivo de índice em leitura
     FILE *arv_indice = abrir_arvoreB(nome_indice, "rb");
