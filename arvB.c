@@ -335,18 +335,19 @@ int inserir_arvoreB(FILE *arv, int chave, int pr) {
     return 1;
 }
 
-// Passamos o byte offset no lugar do rrn
 int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
     if (arv_dados == NULL || arv_indice == NULL) return 0;
     
     fseek(arv_dados, 0, SEEK_SET);
-    char status; int topo, proxRRN, nroEst, nroPares;
+    char status; int topo, proxRRN;
     fread(&status, sizeof(char), 1, arv_dados);
     fread(&topo, sizeof(int), 1, arv_dados);
     fread(&proxRRN, sizeof(int), 1, arv_dados);
+    // Avança os 8 bytes
+    fseek(arv_dados, 17, SEEK_SET); 
     
     for (int rrn = 0; rrn < proxRRN; rrn++) {
-        long byte_offset = 17 + ((long)rrn * 80); // calcula offset absoluto
+        long byte_offset = 17 + ((long)rrn * 80); 
         fseek(arv_dados, byte_offset, SEEK_SET);
         
         Registro reg;
@@ -354,7 +355,7 @@ int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
             if (reg.removido == '0' && reg.codEstacao != -1) {
                 inserir_arvoreB(arv_indice, reg.codEstacao, (int)byte_offset);
             }
-            libera_registro(&reg); // desaloca campos dinamicos
+            libera_registro(&reg); 
         }
     }
     return 1;
