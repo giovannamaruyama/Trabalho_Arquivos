@@ -96,6 +96,7 @@ void funcionalidade_8(char *nome_bin, char *nome_indice) {
         if (encontrou == 0) {
             printf("Registro inexistente.\n");
         }
+        printf("\n");
     }
     
     fclose(arv_indice);
