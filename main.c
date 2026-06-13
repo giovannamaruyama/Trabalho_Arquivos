@@ -67,6 +67,11 @@ int main() {
             scanf("%s %s %d", arquivo_entrada, arquivo_arvoreB, &num_insercoes);
             funcionalidade_9(arquivo_entrada, arquivo_arvoreB, num_insercoes);
             break;
+        case 10: // funcionalidade 10 - remoção com índice
+            int num_remocoes;
+            scanf("%s %s %d", arquivo_entrada, arquivo_arvoreB, &num_remocoes);
+            funcionalidade_10(arquivo_entrada, arquivo_arvoreB, num_remocoes);
+            break;
         default:
             printf("Funcionalidade invalida.\n");
             break;

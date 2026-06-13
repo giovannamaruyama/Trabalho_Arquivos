@@ -83,6 +83,8 @@ int busca_em_no(NoArvoreB *no, int chave, int *pr);
 //Remocao logica
 void remove_logicamente_no_arvoreB(FILE *arv, int rrn, CabecalhoArvoreB *cab);
 
+int remover_arvoreB(FILE *arv, int chave)
+
 int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab);
 
 //Constroi arvore
