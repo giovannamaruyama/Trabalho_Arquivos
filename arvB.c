@@ -340,9 +340,7 @@ int construir_arvoreB(FILE *arv_dados, FILE *arv_indice) {
     
     fseek(arv_dados, 0, SEEK_SET);
     char status; int topo, proxRRN;
-    fread(&status, sizeof(char), 1, arv_dados);
-    fread(&topo, sizeof(int), 1, arv_dados);
-    fread(&proxRRN, sizeof(int), 1, arv_dados);
+    Cabecalho cab_dados = le_cabecalho(arv_dados);
     // Avança os 8 bytes
     fseek(arv_dados, 17, SEEK_SET); 
     
