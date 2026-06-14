@@ -47,10 +47,11 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
     fseek(bin, 0, SEEK_SET);
     fwrite(&cab.status, sizeof(char), 1, bin);
     fflush(bin);
- 
+    
     atualiza_status_arvoreB(arv_indice, '0');
     fflush(arv_indice);
  
+    //loop
     for (int i = 0; i < num_remocoes; i++) {
         ConjuntoCriterios conjunto;
         if (le_criterios(&conjunto) != 0) break;
@@ -67,7 +68,6 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
         }
  
         if (usa_indice) {
-            //busca pelo índice
             int byte_offset;
             if (buscar_arvoreB(arv_indice, cod_estacao_busca, &byte_offset)) {
                 fseek(bin, byte_offset, SEEK_SET);
@@ -76,34 +76,28 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
                     if (reg.removido == '0' && satisfaz_todos_criterios(&reg, &conjunto)) {
                         int rrn = (byte_offset - TAM_CABECALHO) / TAM_REGISTRO;
                         
-                        //REMOVE NO ARQUIVO DE DADOS
+                        //Remove sem atualizar cabeçalho ainda
                         remove_logicamente(bin, &cab, rrn);
-                        
-                        //REMOVE DO ÍNDICE 
                         remover_arvoreB(arv_indice, cod_estacao_busca);
                     }
                     libera_registro(&reg);
                 }
             }
         } else {
-            //Busca sequencial
             fseek(bin, TAM_CABECALHO, SEEK_SET);
             Registro reg;
             int rrn_contador = 0;
  
             while (ler_registro_bin(bin, &reg)) {
-                // verifica se segue os criterios
                 if (reg.removido == '0' && satisfaz_todos_criterios(&reg, &conjunto)) {
                     
-                    //remove do arquivo de dados
+                    //Remove sem atualizar cabeçalho ainda
                     remove_logicamente(bin, &cab, rrn_contador);
                     
-                    //remove do indice se for chave primaria
                     if (reg.codEstacao != -1) {
                         remover_arvoreB(arv_indice, reg.codEstacao);
                     }
                     
-                    // Reposiciona para continuar varredura
                     fseek(bin, TAM_CABECALHO + ((long)(rrn_contador + 1) * TAM_REGISTRO), SEEK_SET);
                 }
                 libera_registro(&reg);
@@ -112,16 +106,13 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
         }
     }
  
-    //recalcula contadores
+    //atualiza o cabecalho
     recalcula_contadores(bin, &cab);
-    
-    //finaliza arquivo de dados
     cab.status = '1';
     escreve_cabecalho(bin, &cab);
     fflush(bin);
     fclose(bin);
  
-    //sai 
     BinarioNaTela(nome_bin);
     fechar_arvoreB(arv_indice, nome_indice);
 }
