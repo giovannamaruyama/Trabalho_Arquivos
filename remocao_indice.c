@@ -67,7 +67,7 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
         }
  
         if (usa_indice) {
-            // busca pelo índice
+            //busca pelo índice
             int byte_offset;
             if (buscar_arvoreB(arv_indice, cod_estacao_busca, &byte_offset)) {
                 fseek(bin, byte_offset, SEEK_SET);
@@ -76,14 +76,17 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
                     if (reg.removido == '0' && satisfaz_todos_criterios(&reg, &conjunto)) {
                         int rrn = (byte_offset - TAM_CABECALHO) / TAM_REGISTRO;
                         
-                        // remove no arq de dados
+                        //REMOVE NO ARQUIVO DE DADOS
                         remove_logicamente(bin, &cab, rrn);
+                        
+                        //REMOVE DO ÍNDICE 
+                        remover_arvoreB(arv_indice, cod_estacao_busca);
                     }
                     libera_registro(&reg);
                 }
             }
         } else {
-            // Busca sequencial cega
+            //Busca sequencial
             fseek(bin, TAM_CABECALHO, SEEK_SET);
             Registro reg;
             int rrn_contador = 0;
@@ -92,8 +95,13 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
                 // verifica se segue os criterios
                 if (reg.removido == '0' && satisfaz_todos_criterios(&reg, &conjunto)) {
                     
-                    // apenas remove no arq de dados
+                    //remove do arquivo de dados
                     remove_logicamente(bin, &cab, rrn_contador);
+                    
+                    //remove do indice se for chave primaria
+                    if (reg.codEstacao != -1) {
+                        remover_arvoreB(arv_indice, reg.codEstacao);
+                    }
                     
                     // Reposiciona para continuar varredura
                     fseek(bin, TAM_CABECALHO + ((long)(rrn_contador + 1) * TAM_REGISTRO), SEEK_SET);
