@@ -80,7 +80,7 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
                         remove_logicamente(bin, &cab, rrn);
                         
                         //REMOVE DO ÍNDICE 
-                        //testeremover_arvoreB(arv_indice, cod_estacao_busca);
+                        remover_arvoreB(arv_indice, cod_estacao_busca);
                     }
                     libera_registro(&reg);
                 }
@@ -99,9 +99,9 @@ void funcionalidade_10(char *nome_bin, char *nome_indice, int num_remocoes) {
                     remove_logicamente(bin, &cab, rrn_contador);
                     
                     //remove do indice se for chave primaria
-                    //testeif (reg.codEstacao != -1) {
-                        //remover_arvoreB(arv_indice, reg.codEstacao);
-                    //}
+                    if (reg.codEstacao != -1) {
+                        remover_arvoreB(arv_indice, reg.codEstacao);
+                    }
                     
                     // Reposiciona para continuar varredura
                     fseek(bin, TAM_CABECALHO + ((long)(rrn_contador + 1) * TAM_REGISTRO), SEEK_SET);
