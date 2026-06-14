@@ -388,7 +388,6 @@ int remover_arvoreB(FILE *arv, int chave) {
     if (cab.noRaiz == -1) return 0;
  
     int rrn_atual = cab.noRaiz;
-    int rrn_pai = -1;
  
     // Busca o nó que contém a chave
     while (rrn_atual != -1) {
