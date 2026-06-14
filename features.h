@@ -1,62 +1,127 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
-#include "indice.h"
-#include "features.h"
-#include "arvB.h"
+#ifndef FEATURES_H
+#define FEATURES_H
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+ 
+ //Constantes
+#define TAM_CABECALHO 17
+#define TAM_REGISTRO 80
+#define LIXO '$'
+#define NULO -1
+#define MAX_TAMANHO_STRING 256
+#define MAX_CAMPOS_BUSCA 8
+ 
+ //Structs (trabalho 0)
+typedef struct {
+    char status;
+    int topo;
+    int proxRRN;
+    int nroEstacoes;
+    int nroParesEstacao;
+} Cabecalho;
+ 
+typedef struct {
+    char removido;
+    int proximo;
+    int codEstacao;
+    int codLinha;
+    int codProxEstacao;
+    int distProxEstacao;
+    int codLinhaIntegra;
+    int codEstIntegra;
+    int tamNomeEstacao;
+    char *nomeEstacao;
+    int tamNomeLinha;
+    char *nomeLinha;
+} Registro;
+ 
+typedef struct NoEstacao {
+    char *nome;
+    struct NoEstacao *prox;
+} NoEstacao;
+ 
+typedef struct NoDupla {
+    int cod1;
+    int cod2;
+    struct NoDupla *prox;
+} NoDupla;
 
-//Cria um arquivo de índice Árvore-B para um arq binário existente e para cada registro não removido do arquivo de dados, insere codEstacao
-
-void funcionalidade_7(char *nome_arq_dados, char *nome_arq_indice) {
+//Structs de busca e atualizacao 
+typedef enum {
+    CAMPO_COD_ESTACAO,
+    CAMPO_NOME_ESTACAO,
+    CAMPO_COD_LINHA,
+    CAMPO_NOME_LINHA,
+    CAMPO_COD_PROX_ESTACAO,
+    CAMPO_DIST_PROX_ESTACAO,
+    CAMPO_COD_LINHA_INTEGRA,
+    CAMPO_COD_EST_INTEGRA,
+    CAMPO_INVALIDO
+} TipoCampo;
  
-    //abre arquivo de dados em modo leitura binária
-    FILE *arv_dados = fopen(nome_arq_dados, "rb");
-    if (arv_dados == NULL) {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
+typedef struct {
+    TipoCampo campo;
+    int valor_int;
+    char valor_str[MAX_TAMANHO_STRING];
+    int nulo;
+} CriteriodBusca;
  
-    //lê cabeçalho do arquivo de dados para verificar consistência
-    Cabecalho cab_dados = le_cabecalho(arv_dados);
+typedef struct {
+    CriteriodBusca criterios[MAX_CAMPOS_BUSCA];
+    int num_criterios;
+} ConjuntoCriterios;
  
-    //verifica se o arquivo de dados está consistente
-    if (cab_dados.status != '1') {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
-        return;
-    }
+typedef struct {
+    CriteriodBusca atualizacoes[MAX_CAMPOS_BUSCA];
+    int num_atualizacoes;
+} ConjuntoAtualizacoes;
  
-    //cria o arquivo de índice Árvore-B vazio (sobrescreve se existir)
-    int criado = criar_arvoreB(nome_arq_indice);
-    if (criado == 0) {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
-        return;
-    }
+//Funcionalidades do trabalho 1:
+void create_table(char *nome_csv, char *nome_bin) ;
+void select_from(char *nome_bin);
+void select_from_where(char *nome_bin, int num_buscas);
+void delete_from(char *nome_bin, int num_remocoes);
+void insert_into(char *nome_bin, int num_insercoes) ;
+void update_table(char *nome_bin, int num_atualizacoes);
  
-    //abre arquivo de índice para leitura e escrita binária
-    FILE *arv_indice = fopen(nome_arq_indice, "r+b");
-    if (arv_indice == NULL) {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
-        return;
-    }
+//Registros
  
-    //marca arquivo de índice como inconsistente durante a construção
-    atualiza_status_arvoreB(arv_indice, '0');
+void inicializa_registro(Registro *reg);
+void libera_registro(Registro *reg);
+void imprime_registro(Registro *reg);
+int ler_registro_bin(FILE *bin, Registro *reg);
+void escreve_registro_bin(FILE *bin, Registro *reg);
+void le_novo_registro(Registro *reg);
+void reescreve_registro_atualizado(FILE *bin, long byte_offset, Registro *reg);
  
-    //constrói o índice inserindo um registro por vez
-    int sucesso = construir_arvoreB(arv_dados, arv_indice);
-    if (sucesso == 0) {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(arv_dados);
-        fclose(arv_indice);
-        return;
-    }
+//Cabeçalho
  
-    //fecha arquivo de dados
-    fclose(arv_dados);
+void inicializa_cabecalho(Cabecalho *cab);
+void escreve_cabecalho(FILE *bin, Cabecalho *cab);
+Cabecalho le_cabecalho(FILE *bin);
+void inserir_estacao(NoEstacao **lista, char *nome_estacao, int *contador_estacoes);
+void inserir_par(NoDupla **lista, int cod1, int cod2, int *contador_pares);
+void liberar_lista_estacoes(NoEstacao *lista);
+void liberar_lista_pares(NoDupla *lista);
  
-    //marca arquivo de índice como consistente e exibe conteúdo binário e fecha a arvore b
-    fechar_arvoreB(arv_indice, nome_arq_indice);
-}
+//Funções de critérios e busca 
+ 
+TipoCampo identifica_campo(const char *nome_campo);
+int satisfaz_criterio(const Registro *reg, const CriteriodBusca *criterio);
+int satisfaz_todos_criterios(const Registro *reg, const ConjuntoCriterios *conjunto);
+int busca_por_cod_estacao_unico(const ConjuntoCriterios *conjunto);
+int le_criterios(ConjuntoCriterios *conjunto);
+int le_atualizacoes(ConjuntoAtualizacoes *conjunto);
+void aplica_atualizacao(Registro *reg, const ConjuntoAtualizacoes *atualizacao);
+void remove_logicamente(FILE *bin, Cabecalho *cab, int rrn_atual);
+ 
+//Funções do auxcsv 
+void BinarioNaTela(char *arquivo);
+void ScanQuoteString(char *str);
+int ler_linha_csv(FILE *csv, Registro *reg);
+void recalcula_contadores(FILE *bin, Cabecalho *cab);
+ 
+#endif 

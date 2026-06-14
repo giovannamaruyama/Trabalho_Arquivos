@@ -1,94 +1,62 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
-
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include "indice.h"
 #include "features.h"
-#include "cabecalho.h"
-#include "registro.h"
+#include "arvB.h"
+#include <string.h>
 
-void inicializa_cabecalho(Cabecalho *cab) {
-    cab->status = '0'; 
-    cab->topo = -1;
-    cab->proxRRN = 0;
-    cab->nroEstacoes = 0;
-    cab->nroParesEstacao = 0;
-}
+//Cria um arquivo de índice Árvore-B para um arq binário existente e para cada registro não removido do arquivo de dados, insere codEstacao
 
-void escreve_cabecalho(FILE *bin, Cabecalho *cab) {
-    fseek(bin, 0, SEEK_SET);
-    fwrite(&cab->status, sizeof(char), 1, bin);
-    fwrite(&cab->topo, sizeof(int), 1, bin);
-    fwrite(&cab->proxRRN, sizeof(int), 1, bin);
-    fwrite(&cab->nroEstacoes, sizeof(int), 1, bin);
-    fwrite(&cab->nroParesEstacao, sizeof(int), 1, bin);
-}
-
-Cabecalho le_cabecalho(FILE *bin) {
-    Cabecalho cab;
-    fseek(bin, 0, SEEK_SET);
-    fread(&cab.status, sizeof(char), 1, bin);
-    fread(&cab.topo, sizeof(int),  1, bin);
-    fread(&cab.proxRRN,  sizeof(int),  1, bin);
-    fread(&cab.nroEstacoes, sizeof(int),  1, bin);
-    fread(&cab.nroParesEstacao, sizeof(int),  1, bin);
-    return cab;
-}
-
-//Listas para o header:
-
-void inserir_estacao(NoEstacao **lista, char *nome_estacao, int *contador_estacoes) {
-    if (nome_estacao == NULL || strlen(nome_estacao) == 0) return;
-
-    NoEstacao *atual = *lista;
-    while (atual != NULL) {
-        if (strcmp(atual->nome, nome_estacao) == 0) return; //confeere se ja nn existe uma estacao com o mesmo nome
-        atual = atual->prox;
+void funcionalidade_7(char *nome_arq_dados, char *nome_arq_indice) {
+ 
+    //abre arquivo de dados em modo leitura binária
+    FILE *arv_dados = fopen(nome_arq_dados, "rb");
+    if (arv_dados == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
     }
-    
-    NoEstacao *novo = malloc(sizeof(NoEstacao)); //vai montando a lista de estacoes
-    novo->nome = malloc((strlen(nome_estacao) + 1) * sizeof(char));
-    strcpy(novo->nome, nome_estacao);
-    novo->prox = *lista;
-    *lista = novo;
-    
-    (*contador_estacoes)++; 
-}
-
-void inserir_par(NoDupla **lista, int cod1, int cod2, int *contador_pares) {
-    if (cod1 == -1 || cod2 == -1) return;
-
-    NoDupla *atual = *lista;
-    while (atual != NULL) {
-        if (atual->cod1 == cod1 && atual->cod2 == cod2) return; //confeere se ja nn existe uma dupla de estacoes igual
-        atual = atual->prox;
+ 
+    //lê cabeçalho do arquivo de dados para verificar consistência
+    Cabecalho cab_dados = le_cabecalho(arv_dados);
+ 
+    //verifica se o arquivo de dados está consistente
+    if (cab_dados.status != '1') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(arv_dados);
+        return;
     }
-    
-    NoDupla *novo_par = malloc(sizeof(NoDupla)); //monta a lista 
-    novo_par->cod1 = cod1;
-    novo_par->cod2 = cod2;
-    novo_par->prox = *lista;
-    *lista = novo_par;
-    
-    (*contador_pares)++; 
-}
-
-void liberar_lista_estacoes(NoEstacao *lista) {
-    NoEstacao *atual = lista;
-    while (atual != NULL) {
-        NoEstacao *aux = atual;
-        atual = atual->prox;
-        free(aux->nome);
-        free(aux);
+ 
+    //cria o arquivo de índice Árvore-B vazio (sobrescreve se existir)
+    int criado = criar_arvoreB(nome_arq_indice);
+    if (criado == 0) {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(arv_dados);
+        return;
     }
-}
-
-void liberar_lista_pares(NoDupla *lista) {
-    NoDupla *atual = lista;
-    while (atual != NULL) {
-        NoDupla *aux = atual;
-        atual = atual->prox;
-        free(aux);
+ 
+    //abre arquivo de índice para leitura e escrita binária
+    FILE *arv_indice = fopen(nome_arq_indice, "r+b");
+    if (arv_indice == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(arv_dados);
+        return;
     }
+ 
+    //marca arquivo de índice como inconsistente durante a construção
+    atualiza_status_arvoreB(arv_indice, '0');
+ 
+    //constrói o índice inserindo um registro por vez
+    int sucesso = construir_arvoreB(arv_dados, arv_indice);
+    if (sucesso == 0) {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(arv_dados);
+        fclose(arv_indice);
+        return;
+    }
+ 
+    //fecha arquivo de dados
+    fclose(arv_dados);
+ 
+    //marca arquivo de índice como consistente e exibe conteúdo binário e fecha a arvore b
+    fechar_arvoreB(arv_indice, nome_arq_indice);
 }

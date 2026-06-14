@@ -1,93 +1,24 @@
 //Giovanna Maruyama - 16869489
 //Giovanni Torres Bullo - 16869833
-#ifndef ARV_B_H
-#define ARV_B_H
-#include "features.h"
+#ifndef AUXCSV_H
+#define AUXCSV_H
 
-//constantes arvore b
-#define TAM_CABECALHO_ARVORE_B 17  //tamanho cabeçalho: 17 bytes
-#define TAM_NO_ARVORE_B 53 //Tamanho nó: 53 bytes 
-#define ORDEM_ARVORE_B 4 //Ordem: n = 4 
-#define MAX_CHAVES 3//Maximo chaves: 3 
-#define MAX_FILHOS 4    //Maximo filhos: 4
-#define MIN_CHAVES 1  //Min chaves folha
-#define PROMOCAO 1 //pra insercao
-#define SEM_PROMOCAO 0 //pra insercao
-#define ERRO -1 //pra insercao
+#include <stdio.h>
+#include "cabecalho.h"
+#include "registro.h"
 
-//struct da arvore b
-typedef struct {
-    char status;
-    int noRaiz;
-    int topo;
-    int proxRRN;
-    int nroNos;
-} CabecalhoArvoreB;
- 
-typedef struct {
-    char removido;
-    int proximo;
-    int tipoNo;
-    int nroChaves;
-    int C[3]; //arrumar pra 3
-    int PR[3]; //arrumar pra 3
-    int P[4]; //arrumar pra 4
-} NoArvoreB;
+#define NULO -1
+//Fornecidas:
+void BinarioNaTela(char *arquivo);
+void ScanQuoteString(char *str);
 
-//Cria um novo arquivo de índice Árvore-B vazio
-int criar_arvoreB(char *nome_arquivo);
+//Funções de manipulação e leitura 
+int nulo_csv(char *campo);
+int converte_csv(char *campo);
+char* extrai_campo_csv(char **campo_string);
+int ler_linha_csv(FILE *csv, Registro *reg);
 
-//Abre um arquivo de índice Árvore-B existente
-FILE* abrir_arvoreB(char *nome_arquivo, char *modo);
+//Funcao auxiliar para recalcular os contadores sem os removidos
+void recalcula_contadores(FILE *bin, Cabecalho *cab);
 
-//Fecha arquivo Árvore-B
-void fechar_arvoreB(FILE *arv, char *nome_arquivo);
-
-//Operacoes de cabecalho
-void inicializa_cabecalho_arvoreB(CabecalhoArvoreB *cab);
-
-//Lê cabeçalho do arquivo da posição 0
-CabecalhoArvoreB le_cabecalho_arvoreB(FILE *arv);
-
-//Escreve cabeçalho no arquivo (posição 0)
-void escreve_cabecalho_arvoreB(FILE *arv, CabecalhoArvoreB *cab);
-
-//Atualiza apenas o status do cabeçalho
-void atualiza_status_arvoreB(FILE *arv, char status);
-
-//Funcoes para o no
-void inicializa_no_arvoreB(NoArvoreB *no, int tipo);
-
-//Lê nó do arquivo pelo RRN
-NoArvoreB le_no_arvoreB(FILE *arv, int rrn);
-
-//escreve nó no arquivo na posição RRN
-int escreve_no_arvoreB(FILE *arv, int rrn, NoArvoreB *no);
-
-//Procura posição para inserir chave em nó ordeado
-
-int procura_posicao(NoArvoreB *no, int chave);
-
-//Insercao
-int inserir_arvoreB(FILE *arv, int chave, int pr);
-
-int split_no_arvoreB(FILE *arv, int *caminho, int nivel, NoArvoreB *no_original, int chave_nova, int pr_novo, int rrn_filho_direito);
-
-void insere_em_no(NoArvoreB *no, int chave, int pr);
-
-//Busca
-int buscar_arvoreB(FILE *arv, int chave, int *pr);
-
-int busca_em_no(NoArvoreB *no, int chave, int *pr);
-
-//Remocao logica
-void remove_logicamente_no_arvoreB(FILE *arv, int rrn, CabecalhoArvoreB *cab);
-
-int remover_arvoreB(FILE *arv, int chave);
-
-int reutiliza_no_arvoreB(FILE *arv, CabecalhoArvoreB *cab);
-
-//Constroi arvore
-int construir_arvoreB(FILE *arv_dados, FILE *arv_indice);
-
-#endif 
+#endif
