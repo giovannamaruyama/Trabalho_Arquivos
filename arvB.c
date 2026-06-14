@@ -380,8 +380,7 @@ int buscar_arvoreB(FILE *arv, int chave, int *pr) {
     return 0;
 }
 
-
-// Remove a chave da árvore-B (remoção lógica do nó que contém a chave)
+//Remove a chave da árvore-B E marca nó como removido se ficar vazio
 int remover_arvoreB(FILE *arv, int chave) {
     if (arv == NULL) return 0;
  
@@ -389,7 +388,9 @@ int remover_arvoreB(FILE *arv, int chave) {
     if (cab.noRaiz == -1) return 0;
  
     int rrn_atual = cab.noRaiz;
+    int rrn_pai = -1;
  
+    // Busca o nó que contém a chave
     while (rrn_atual != -1) {
         NoArvoreB no = le_no_arvoreB(arv, rrn_atual);
  
@@ -403,34 +404,31 @@ int remover_arvoreB(FILE *arv, int chave) {
         }
  
         if (achou != -1) {
-            //remove a chave na posição achou deslocando as demais
+            //remove a chave deslocando as demais
             for (int i = achou; i < no.nroChaves - 1; i++) {
                 no.C[i]  = no.C[i + 1];
                 no.PR[i] = no.PR[i + 1];
             }
-            // Limpa última posição liberada
+            // Limpa última posição
             no.C[no.nroChaves - 1]  = -1;
             no.PR[no.nroChaves - 1] = -1;
             no.nroChaves--;
  
-            escreve_no_arvoreB(arv, rrn_atual, &no);
-            
-            //se o no ficou vazio marca como removido
+            //marca se o no ficou vazio e a raiz nn
             if (no.nroChaves == 0 && rrn_atual != cab.noRaiz) {
                 no.removido = '1';
                 no.proximo = cab.topo;
                 cab.topo = rrn_atual;
-                cab.nroNos--;  //decrementa o nro de nos
-                escreve_no_arvoreB(arv, rrn_atual, &no);
+                cab.nroNos--;
             }
-            
-            //atualiza o cabecalho
+ 
+            escreve_no_arvoreB(arv, rrn_atual, &no);
             escreve_cabecalho_arvoreB(arv, &cab);
-            
             return 1;
         }
  
         // Desce para o filho adequado
+        rrn_pai = rrn_atual;
         rrn_atual = no.P[procura_posicao(&no, chave)];
     }
  
