@@ -381,22 +381,14 @@ int buscar_arvoreB(FILE *arv, int chave, int *pr) {
 }
 
 
-// Remove a chave da árvore-B (remoção lógica do nó que contém a chave)
-// Retorna 1 se removeu, 0 se não encontrou
+// Remove a chave da árvore-B 
 int remover_arvoreB(FILE *arv, int chave) {
     if (arv == NULL) return 0;
  
     CabecalhoArvoreB cab = le_cabecalho_arvoreB(arv);
     if (cab.noRaiz == -1) return 0;
  
-    // Busca o nó que contém a chave (sempre estará numa folha ou nó interno)
-    // Para árvore-B sem deleção física, fazemos remoção lógica marcando PR=-1
-    // e C=-1 dentro do nó, compactando as chaves restantes.
-    // Percurso iterativo descendo a árvore
- 
-    int profundidade = 0;
-    (void)profundidade;
- 
+    //desce a árvore
     int rrn_atual = cab.noRaiz;
  
     while (rrn_atual != -1) {
@@ -412,12 +404,12 @@ int remover_arvoreB(FILE *arv, int chave) {
         }
  
         if (achou != -1) {
-            // Compacta: remove a chave na posição achou deslocando as demais
+            //remove a chave na posição achou deslocando as demais
             for (int i = achou; i < no.nroChaves - 1; i++) {
                 no.C[i]  = no.C[i + 1];
                 no.PR[i] = no.PR[i + 1];
             }
-            // Limpa última posição liberada
+            //Limpa última posição liberada
             no.C[no.nroChaves - 1]  = -1;
             no.PR[no.nroChaves - 1] = -1;
             no.nroChaves--;
@@ -426,11 +418,10 @@ int remover_arvoreB(FILE *arv, int chave) {
             return 1;
         }
  
-        // Desce para o filho adequado
-        profundidade++;
- 
-        rrn_atual = no.P[procura_posicao(&no, chave)];
+        //Desce para o filho adequado
+        int pos = procura_posicao(&no, chave);
+        rrn_atual = no.P[pos];
     }
  
-    return 0; // não encontrou
+    return 0; //não encontrou
 }
