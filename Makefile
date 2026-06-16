@@ -1,5 +1,5 @@
 # Nome do executável final
-EXEC = programa
+EXEC = programaTrab
 
 # Compilador e flags de compilação (Adicionado o -I. para a pasta raiz)
 CC = gcc
