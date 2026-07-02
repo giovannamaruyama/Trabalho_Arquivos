@@ -6,6 +6,7 @@
 #include "registro.h"
 #include "auxcsv.h"
 #include "indice.h"
+#include "juncao.h"
 #include <stdio.h>
 
 int main() {
@@ -71,7 +72,19 @@ int main() {
             int num_remocoes;
             scanf("%s %s %d", arquivo_entrada, arquivo_arvoreB, &num_remocoes);
             delete_from_idx(arquivo_entrada, arquivo_arvoreB, num_remocoes);
+            break; 
+        case 11: { //funcionalidade 11 merge por loop aninhado
+            char campo1[50], campo2[50], arq2[100];
+            scanf("%s %s %s %s", arquivo_entrada, campo1, arq2, campo2);
+            nested_loop_join(arquivo_entrada, arq2);
             break;
+        }
+        case 12: { //funcionalidade 12: merge por loop único com índice árvore-B
+            char campo1[50], campo2[50], arq2[100], arq_idx[100];
+            scanf("%s %s %s %s %s", arquivo_entrada, campo1, arq2, campo2, arq_idx);
+            loop_unico_join(arquivo_entrada, arq2, arq_idx);
+            break;
+}
         default:
             printf("Funcionalidade invalida.\n");
             break;
